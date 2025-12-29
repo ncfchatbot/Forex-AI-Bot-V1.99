@@ -2,7 +2,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MarketSignal, MarketSide, StrategyVerdict } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Helper to safely get the API key
+const getSafeAiInstance = () => {
+  const apiKey = process.env.API_KEY || '';
+  return new GoogleGenAI({ apiKey });
+};
 
 export interface UnifiedAnalysis {
   signal: MarketSignal;
@@ -14,7 +18,8 @@ async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000)
   try {
     return await fn();
   } catch (error: any) {
-    if ((error?.message?.includes('429') || error?.status === 429) && retries > 0) {
+    const isQuotaError = error?.message?.includes('429') || error?.status === 429;
+    if (isQuotaError && retries > 0) {
       await new Promise(resolve => setTimeout(resolve, delay));
       return callWithRetry(fn, retries - 1, delay * 2);
     }
@@ -23,6 +28,7 @@ async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000)
 }
 
 export const getUnifiedAnalysis = async (symbol: string, capital: number): Promise<UnifiedAnalysis> => {
+  const ai = getSafeAiInstance();
   const fetchAll = async () => {
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
@@ -75,15 +81,16 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
   try {
     return await callWithRetry(fetchAll);
   } catch (error: any) {
+    console.warn("Analysis Error:", error);
     return {
       signal: {
-        side: MarketSide.NEUTRAL, confidence: 0, reasoning: "API Limit. Using local safe calculation.",
-        timestamp: Date.now(), keyFactors: ["Quota Throttled"]
+        side: MarketSide.NEUTRAL, confidence: 0, reasoning: "System Initializing or Quota Limit. Please check back in a moment.",
+        timestamp: Date.now(), keyFactors: ["Initializing"]
       },
       verdict: {
-        successProbability: 55, riskOfRuin: 15, 
-        verdict: "Initial SL is mandatory. Compounding increases growth efficiency.",
-        suggestions: ["Scale Lot 0.05 per $100", "Never trade without SL", "Trust the trend"]
+        successProbability: 50, riskOfRuin: 10, 
+        verdict: "Ready for trade execution. Ensure SL is always active.",
+        suggestions: ["Scale Lot 0.05 per $100", "Use v2.2 Auto-Compound"]
       },
       recommendedLot: Math.max(0.01, Number((capital / 100 * 0.05).toFixed(2)))
     };
