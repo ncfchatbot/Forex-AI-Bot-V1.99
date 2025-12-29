@@ -1,0 +1,5 @@
+{
+  "name": "Gold Scalper AI Dashboard",
+  "description": "A sophisticated AI-driven trading companion for Gold (XAUUSD) scalping, focusing on high-frequency, small-gain fundamental strategies with Gemini-powered market sentiment analysis.",
+  "requestFramePermissions": []
+}
