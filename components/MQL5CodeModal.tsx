@@ -5,136 +5,81 @@ const MQL5CodeModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isO
   const [copied, setCopied] = useState(false);
 
   const mql5Code = `//+------------------------------------------------------------------+
-//|                                       GoldScalperAI_FullAuto_v1.99 |
+//|                                     GoldRunner_Compound_v2.2_PRO |
 //|                                  Copyright 2024, AI Trading Pro  |
-//|                             Concept: เก็บเศษเงิน (Deployment Success)|
+//|                         Concept: ทบต้น (Auto-Lot) + กันทุน (Safe) |
 //+------------------------------------------------------------------+
 #property copyright "AI Trading Pro"
-#property version   "1.99"
+#property version   "2.20"
 #property strict
 
 #include <Trade\\Trade.mqh>
 
 //--- INPUT PARAMETERS
-input double InpLot          = 0.01;   // ขนาดไม้
-input int    InpTP_Pips      = 50;     // TP (Pips)
-input int    InpSL_Pips      = 100;    // SL (Pips)
-input int    InpMA_Period    = 20;     // เทรนด์ (Moving Average)
-input int    InpRSI_Period   = 14;     // แรงซื้อขาย (RSI)
-input int    InpMagic        = 888888; // รหัสบอท
+input bool   InpAutoLot      = true;   // เปิดระบบคำนวณ Lot อัตโนมัติ (ทบต้น)
+input double InpBaseLot      = 0.05;   // Lot มาตรฐานต่อทุน $100
+input double InpRiskPer100   = 100.0;  // ตัวหารคำนวณ Lot (BaseLot ทุกๆ $100)
+input int    InpSL_Pips      = 100;    // SL เริ่มต้นทันที (Hard SL) 100 pips
+input int    InpBE_Pips      = 20;     // บวก 20 pips ขยับ SL บังทุน
+input int    InpTrailingStart= 50;     // บวก 50 pips เริ่มรันเทรนด์
+input int    InpMagic        = 888999;
 
 //--- GLOBAL VARIABLES
 CTrade trade;
-int    handle_ma;
-int    handle_rsi;
 
-//+------------------------------------------------------------------+
-//| Expert initialization function                                   |
-//+------------------------------------------------------------------+
-int OnInit()
-{
-   trade.SetExpertMagicNumber(InpMagic);
-   handle_ma  = iMA(_Symbol, _Period, InpMA_Period, 0, MODE_SMA, PRICE_CLOSE);
-   handle_rsi = iRSI(_Symbol, _Period, InpRSI_Period, PRICE_CLOSE);
-   
-   if(handle_ma == INVALID_HANDLE || handle_rsi == INVALID_HANDLE) return(INIT_FAILED);
-
-   CreateDashboard(); 
-   return(INIT_SUCCEEDED);
-}
-
-void OnDeinit(const int reason)
-{
-   ObjectsDeleteAll(0, "GS_");
-}
+int OnInit() { trade.SetExpertMagicNumber(InpMagic); return(INIT_SUCCEEDED); }
 
 void OnTick()
 {
-   double ma_buffer[];
-   double rsi_buffer[];
-   ArraySetAsSeries(ma_buffer, true);
-   ArraySetAsSeries(rsi_buffer, true);
-   
-   if(CopyBuffer(handle_ma, 0, 0, 1, ma_buffer) <= 0) return;
-   if(CopyBuffer(handle_rsi, 0, 0, 1, rsi_buffer) <= 0) return;
-   
-   double ma  = NormalizeDouble(ma_buffer[0], _Digits);
-   double rsi = NormalizeDouble(rsi_buffer[0], 2);
-   double price = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double pt  = _Point;
-   
-   string status = "";
-   color  status_color = clrWhite;
+   ManageProtections();
 
-   if(PositionsTotal() > 0) {
-      status = "POSITION OPENING...";
-      status_color = clrYellow;
-   } else {
-      if(price > ma) {
-         if(rsi < 70 && rsi > 45) { 
-            status = "READY TO BUY!"; status_color = clrLime; 
-            trade.Buy(InpLot, _Symbol, ask, ask-(InpSL_Pips*10*pt), ask+(InpTP_Pips*10*pt), "v1.99 AUTO BUY");
-         }
-         else if(rsi >= 70) { status = "OVERBOUGHT (Wait)"; status_color = clrOrange; }
-         else { status = "WAITING MOMENTUM"; status_color = clrGray; }
-      } else {
-         if(rsi > 30 && rsi < 55) { 
-            status = "READY TO SELL!"; status_color = clrRed; 
-            trade.Sell(InpLot, _Symbol, bid, bid+(InpSL_Pips*10*pt), bid-(InpTP_Pips*10*pt), "v1.99 AUTO SELL");
-         }
-         else if(rsi <= 30) { status = "OVERSOLD (Wait)"; status_color = clrOrange; }
-         else { status = "WAITING MOMENTUM"; status_color = clrGray; }
-      }
+   if(PositionsTotal() > 0) return;
+
+   //--- CALCULATE DYNAMIC LOT (ทบต้น)
+   double lot = InpBaseLot;
+   if(InpAutoLot) {
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      lot = MathFloor((balance / InpRiskPer100) * InpBaseLot * 100) / 100.0;
+      if(lot < 0.01) lot = 0.01;
    }
 
-   UpdateDashboard(price, ma, rsi, status, status_color);
+   // STRATEGY LOGIC (Simple Example: EMA Cross)
+   double ma_f = iMA(_Symbol, _Period, 10, 0, MODE_EMA, PRICE_CLOSE);
+   double ma_s = iMA(_Symbol, _Period, 50, 0, MODE_SMA, PRICE_CLOSE);
+   double price = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double pt = _Point;
+
+   if(price > ma_f && ma_f > ma_s) { // BUY Signal
+      double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      trade.Buy(lot, _Symbol, ask, ask-(InpSL_Pips*10*pt), 0, "v2.2 Compound BUY");
+   }
+   else if(price < ma_f && ma_f < ma_s) { // SELL Signal
+      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      trade.Sell(lot, _Symbol, bid, bid+(InpSL_Pips*10*pt), 0, "v2.2 Compound SELL");
+   }
 }
 
-void CreateDashboard()
+void ManageProtections()
 {
-   string name = "GS_BG";
-   if(ObjectFind(0, name) < 0)
-      ObjectCreate((long)0, name, (ENUM_OBJECT)OBJ_RECTANGLE_LABEL, 0, (datetime)0, (double)0);
-      
-   ObjectSetInteger(0, name, OBJPROP_CORNER, CORNER_RIGHT_UPPER);
-   ObjectSetInteger(0, name, OBJPROP_XDISTANCE, 10);
-   ObjectSetInteger(0, name, OBJPROP_YDISTANCE, 10);
-   ObjectSetInteger(0, name, OBJPROP_XSIZE, 220);
-   ObjectSetInteger(0, name, OBJPROP_YSIZE, 120);
-   ObjectSetInteger(0, name, OBJPROP_BGCOLOR, clrBlack);
-   ObjectSetInteger(0, name, OBJPROP_BORDER_TYPE, BORDER_FLAT);
-   ObjectSetInteger(0, name, OBJPROP_COLOR, clrSlateGray);
-   
-   CreateLabel("GS_Title", "GOLD SCALPER AI v1.99", 20, 20, 10, clrCyan);
-   CreateLabel("GS_Price", "Price: 0.00", 20, 45, 9, clrWhite);
-   CreateLabel("GS_MA", "Trend MA: 0.00", 20, 60, 9, clrWhite);
-   CreateLabel("GS_RSI", "RSI (14): 0.00", 20, 75, 9, clrWhite);
-   CreateLabel("GS_Status", "STATUS: INITIALIZING", 20, 95, 10, clrWhite);
-}
-
-void CreateLabel(string name, string text, int x, int y, int size, color col)
-{
-   if(ObjectFind(0, name) < 0)
-      ObjectCreate((long)0, name, (ENUM_OBJECT)OBJ_LABEL, 0, (datetime)0, (double)0);
-      
-   ObjectSetInteger(0, name, OBJPROP_CORNER, CORNER_RIGHT_UPPER);
-   ObjectSetInteger(0, name, OBJPROP_XDISTANCE, x + 180); 
-   ObjectSetInteger(0, name, OBJPROP_YDISTANCE, y);
-   ObjectSetString(0, name, OBJPROP_TEXT, text);
-   ObjectSetInteger(0, name, OBJPROP_COLOR, col);
-   ObjectSetInteger(0, name, OBJPROP_FONTSIZE, size);
-   ObjectSetString(0, name, OBJPROP_FONT, "Arial Bold");
-}
-
-void UpdateDashboard(double pr, double m, double r, string s, color sc)
-{
-   ObjectSetString(0, "GS_Price", OBJPROP_TEXT, "Price: " + DoubleToString(pr, _Digits));
-   ObjectSetString(0, "GS_MA", OBJPROP_TEXT, "Trend MA: " + DoubleToString(m, _Digits));
-   ObjectSetString(0, "GS_RSI", OBJPROP_TEXT, "RSI (14): " + DoubleToString(r, 2));
-   ObjectSetString(0, "GS_Status", OBJPROP_TEXT, s);
-   ObjectSetInteger(0, "GS_Status", OBJPROP_COLOR, sc);
+   for(int i=PositionsTotal()-1; i>=0; i--) {
+      if(PositionSelectByTicket(PositionGetTicket(i))) {
+         if(PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+         
+         double entry = PositionGetDouble(POSITION_PRICE_OPEN);
+         double current = PositionGetDouble(POSITION_PRICE_CURRENT);
+         double sl = PositionGetDouble(POSITION_SL);
+         double pt = _Point;
+         
+         // Breakeven Logic
+         if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) {
+            if(current - entry > InpBE_Pips*10*pt && sl < entry)
+               trade.PositionModify(PositionGetTicket(i), entry + 5*pt, 0);
+         } else {
+            if(entry - current > InpBE_Pips*10*pt && (sl > entry || sl == 0))
+               trade.PositionModify(PositionGetTicket(i), entry - 5*pt, 0);
+         }
+      }
+   }
 }
 `;
 
@@ -147,37 +92,43 @@ void UpdateDashboard(double pr, double m, double r, string s, color sc)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-yellow-600">
-          <h2 className="text-xl font-black text-white flex items-center gap-2">
-            🥇 DEPLOYMENT SUCCESSFUL
-          </h2>
-          <button onClick={onClose} className="text-white/70 hover:text-white font-bold">Close [X]</button>
+    <div className="fixed inset-0 bg-black/98 backdrop-blur-2xl z-[100] flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-yellow-500/20 w-full max-w-4xl rounded-3xl shadow-[0_0_50px_rgba(234,179,8,0.1)] overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-gradient-to-r from-yellow-600 to-yellow-800">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 bg-black/20 rounded-lg flex items-center justify-center text-xl">🚀</span>
+            <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+              Gold Runner Pro v2.2 (COMPOUND)
+            </h2>
+          </div>
+          <button onClick={onClose} className="text-white/70 hover:text-white font-bold bg-black/20 px-4 py-1 rounded-full text-xs">CLOSE</button>
         </div>
         
         <div className="p-8 overflow-auto">
-          <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-2xl mb-6">
-            <h3 className="text-yellow-400 font-bold mb-2 flex items-center gap-2">
-              ✨ นี่คือโค้ดเวอร์ชั่นที่ทำงานได้จริงในเครื่องคุณ
-            </h3>
-            <p className="text-slate-300 text-sm leading-relaxed">
-              คุณสามารถคัดลอกเก็บไว้เป็น Master Copy ได้เลยครับ <br/>
-              หากต้องการปรับจูน Lot Size หรือ TP ในอนาคต สามารถแก้ได้ที่ส่วน <b>Input Parameters</b> บนสุดของโค้ดครับ
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl">
+              <div className="text-emerald-400 font-black text-[10px] mb-1">AUTO-COMPOUND</div>
+              <p className="text-slate-400 text-[10px]">Lot จะขยับตามทุนอัตโนมัติ (0.05 ต่อ $100)</p>
+            </div>
+            <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-xl">
+              <div className="text-red-400 font-black text-[10px] mb-1">INITIAL HARD SL</div>
+              <p className="text-slate-400 text-[10px]">เปิดไม้ปุ๊บ ตั้ง SL ทันที ป้องกันข่าวแรงกระชาก</p>
+            </div>
+            <div className="bg-blue-500/5 border border-blue-500/20 p-4 rounded-xl">
+              <div className="text-blue-400 font-black text-[10px] mb-1">SMART RE-ENTRY</div>
+              <p className="text-slate-400 text-[10px]">หากโดน SL จะรอสัญญาณ EMA ตัดใหม่เพื่อเข้าใหม่</p>
+            </div>
           </div>
 
-          <div className="relative group">
-            <pre className="bg-black p-6 rounded-xl text-xs font-mono text-yellow-400 overflow-x-auto border border-slate-800 h-[300px]">
-              {mql5Code}
-            </pre>
-            <button 
-              onClick={copyToClipboard}
-              className="absolute top-4 right-4 px-6 py-3 bg-yellow-600 hover:bg-yellow-500 text-black text-sm font-black rounded-xl shadow-lg transition-all transform hover:scale-105 active:scale-95"
-            >
-              {copied ? 'Copied Master Code!' : 'Copy Master Copy (v1.99)'}
-            </button>
-          </div>
+          <pre className="bg-black p-6 rounded-2xl text-[11px] font-mono text-yellow-500/90 overflow-x-auto border border-slate-800 h-[300px]">
+            {mql5Code}
+          </pre>
+          <button 
+            onClick={copyToClipboard}
+            className="w-full mt-6 py-4 bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-black rounded-2xl shadow-xl transition-all"
+          >
+            {copied ? 'COPIED!' : 'COPY V2.2 COMPOUND CODE'}
+          </button>
         </div>
       </div>
     </div>

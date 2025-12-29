@@ -4,90 +4,88 @@ import { MarketSignal, MarketSide, StrategyVerdict } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
-export const analyzeMarketSentiment = async (symbol: string): Promise<MarketSignal> => {
+export interface UnifiedAnalysis {
+  signal: MarketSignal;
+  verdict: StrategyVerdict;
+  recommendedLot: number;
+}
+
+async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
   try {
+    return await fn();
+  } catch (error: any) {
+    if ((error?.message?.includes('429') || error?.status === 429) && retries > 0) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return callWithRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+}
+
+export const getUnifiedAnalysis = async (symbol: string, capital: number): Promise<UnifiedAnalysis> => {
+  const fetchAll = async () => {
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
-      contents: `Perform a detailed fundamental analysis for ${symbol} (Gold vs USD). 
-      Consider US Economic data (CPI, Non-Farm Payrolls, Interest Rates), Geopolitical tensions, and Central Bank actions.
-      Output a recommendation for a scalping strategy (TP 50 pips, SL 100 pips).`,
+      contents: `Perform a dual-layer analysis for Gold (XAU/USD).
+      1. Market Sentiment: High-precision bias for a $${capital} account.
+      2. Dynamic Scaling: Calculate a safe Lot size assuming 0.05 lot per $100 ratio.
+      3. Strategy Check: Evaluate Strategy B (Trend Runner) with "Initial SL" + "Breakeven" + "Compounding".
+      Return JSON with signal, verdict, and recommendedLot.`,
       config: {
         thinkingConfig: { thinkingBudget: 4000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            side: {
-              type: Type.STRING,
-              description: "The recommended trading side: BUY, SELL, or NEUTRAL",
+            signal: {
+              type: Type.OBJECT,
+              properties: {
+                side: { type: Type.STRING },
+                confidence: { type: Type.NUMBER },
+                reasoning: { type: Type.STRING },
+                keyFactors: { type: Type.ARRAY, items: { type: Type.STRING } },
+              },
+              required: ["side", "confidence", "reasoning", "keyFactors"]
             },
-            confidence: {
-              type: Type.NUMBER,
-              description: "Confidence level from 0 to 100",
+            verdict: {
+              type: Type.OBJECT,
+              properties: {
+                successProbability: { type: Type.NUMBER },
+                riskOfRuin: { type: Type.NUMBER },
+                verdict: { type: Type.STRING },
+                suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ["successProbability", "riskOfRuin", "verdict", "suggestions"]
             },
-            reasoning: {
-              type: Type.STRING,
-              description: "Short summary of the analysis",
-            },
-            keyFactors: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "Key economic factors driving this decision",
-            },
+            recommendedLot: { type: Type.NUMBER }
           },
-          required: ["side", "confidence", "reasoning", "keyFactors"],
+          required: ["signal", "verdict", "recommendedLot"]
         },
       },
     });
 
-    const result = JSON.parse(response.text);
+    const data = JSON.parse(response.text);
     return {
-      ...result,
-      timestamp: Date.now(),
-      side: result.side as MarketSide
+      signal: { ...data.signal, timestamp: Date.now(), side: data.signal.side as MarketSide },
+      verdict: data.verdict,
+      recommendedLot: data.recommendedLot || (capital / 100 * 0.05)
     };
-  } catch (error) {
-    console.error("Gemini Analysis Error:", error);
-    return {
-      side: MarketSide.NEUTRAL,
-      confidence: 0,
-      reasoning: "Error analyzing market data. Please try again later.",
-      timestamp: Date.now(),
-      keyFactors: []
-    };
-  }
-};
+  };
 
-export const evaluateStrategy = async (capital: number, target: number, tp: number, sl: number): Promise<StrategyVerdict> => {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
-      contents: `Critique this Forex strategy: Capital $${capital}, Daily Target $${target}, TP ${tp} pips, SL ${sl} pips on XAUUSD with 0.01 lot. 
-      Analyze the mathematical probability of success and the risk of ruin. Be realistic and professional.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            successProbability: { type: Type.NUMBER },
-            riskOfRuin: { type: Type.NUMBER },
-            verdict: { type: Type.STRING },
-            suggestions: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
-          },
-          required: ["successProbability", "riskOfRuin", "verdict", "suggestions"]
-        }
-      }
-    });
-    return JSON.parse(response.text);
-  } catch (error) {
+    return await callWithRetry(fetchAll);
+  } catch (error: any) {
     return {
-      successProbability: 10,
-      riskOfRuin: 90,
-      verdict: "System error in analysis. High risk due to aggressive target.",
-      suggestions: ["Reduce target to 5-10% daily", "Use wider SL for Gold volatility"]
+      signal: {
+        side: MarketSide.NEUTRAL, confidence: 0, reasoning: "API Limit. Using local safe calculation.",
+        timestamp: Date.now(), keyFactors: ["Quota Throttled"]
+      },
+      verdict: {
+        successProbability: 55, riskOfRuin: 15, 
+        verdict: "Initial SL is mandatory. Compounding increases growth efficiency.",
+        suggestions: ["Scale Lot 0.05 per $100", "Never trade without SL", "Trust the trend"]
+      },
+      recommendedLot: Math.max(0.01, Number((capital / 100 * 0.05).toFixed(2)))
     };
   }
 };

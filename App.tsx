@@ -1,38 +1,38 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { MarketSignal, MarketSide, AccountStats, Trade, StrategyVerdict } from './types';
-import { analyzeMarketSentiment, evaluateStrategy } from './services/geminiService';
+import React, { useState, useEffect } from 'react';
+import { MarketSignal, AccountStats, StrategyVerdict } from './types';
+import { getUnifiedAnalysis } from './services/geminiService';
 import SignalCard from './components/SignalCard';
 import StatsPanel from './components/StatsPanel';
 import MQL5CodeModal from './components/MQL5CodeModal';
 import StrategyConsultant from './components/StrategyConsultant';
+import StrategyBattle from './components/StrategyBattle';
 
 const App: React.FC = () => {
   const [signal, setSignal] = useState<MarketSignal | null>(null);
   const [verdict, setVerdict] = useState<StrategyVerdict | null>(null);
+  const [recommendedLot, setRecommendedLot] = useState<number>(0.05);
   const [isLoading, setIsLoading] = useState(false);
   const [isMqlModalOpen, setIsMqlModalOpen] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
   const [stats, setStats] = useState<AccountStats>({
-    balance: 100.00,
+    balance: 100.00, // สามารถจำลองทุนเพิ่มขึ้นได้ที่นี่
     equity: 100.00,
     dailyProfit: 0.00,
     winRate: 0,
     totalTrades: 0
   });
 
-  const [chartData, setChartData] = useState<{name: string, equity: number}[]>([
-    { name: 'Start', equity: 100 }
-  ]);
-
   const handleFetchSignal = async () => {
+    if (cooldown > 0 || isLoading) return;
     setIsLoading(true);
     try {
-      const [marketResult, strategyResult] = await Promise.all([
-        analyzeMarketSentiment("XAU/USD"),
-        evaluateStrategy(100, 100, 50, 100)
-      ]);
-      setSignal(marketResult);
-      setVerdict(strategyResult);
+      const result = await getUnifiedAnalysis("XAU/USD", stats.balance);
+      setSignal(result.signal);
+      setVerdict(result.verdict);
+      setRecommendedLot(result.recommendedLot);
+      setCooldown(30);
     } catch (e) {
       console.error(e);
     } finally {
@@ -40,80 +40,103 @@ const App: React.FC = () => {
     }
   };
 
+  useEffect(() => { handleFetchSignal(); }, []);
   useEffect(() => {
-    handleFetchSignal();
-    const interval = setInterval(handleFetchSignal, 600000); 
-    return () => clearInterval(interval);
-  }, []);
+    if (cooldown > 0) {
+      const timer = setInterval(() => setCooldown(c => c - 1), 1000);
+      return () => clearInterval(timer);
+    }
+  }, [cooldown]);
 
   return (
-    <div className="min-h-screen pb-24 bg-[#050810] text-slate-200">
+    <div className="min-h-screen pb-24 bg-[#020617] text-slate-200">
       <MQL5CodeModal isOpen={isMqlModalOpen} onClose={() => setIsMqlModalOpen(false)} />
       
-      {/* Dynamic Background Effect */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-500/10 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full"></div>
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20">
+        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-yellow-500/10 blur-[150px] rounded-full"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 blur-[150px] rounded-full"></div>
       </div>
 
-      {/* Header Bar */}
-      <div className="bg-slate-900/80 border-b border-slate-800 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/20 ring-1 ring-yellow-400/50">
-              <span className="text-black font-black text-xl">G</span>
+      <div className="bg-slate-950/50 border-b border-slate-800/50 backdrop-blur-2xl sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-700 rounded-2xl flex items-center justify-center shadow-2xl">
+              <span className="text-black font-black text-2xl">R</span>
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight text-white uppercase italic">Gold Station <span className="text-yellow-500">Command Center</span></h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">Bot Status: Online & Monitoring</span>
+              <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">GoldRunner <span className="text-yellow-500 underline decoration-yellow-500/30">V2.2 PRO</span></h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] text-slate-400 font-black tracking-widest uppercase">
+                  Mode: Auto-Compound & Protect
+                </span>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col items-end px-4 border-r border-slate-800 mr-2">
+              <div className="text-[10px] text-slate-500 font-bold uppercase">Target Lot Scale</div>
+              <div className="text-sm font-mono text-yellow-500 font-black">{recommendedLot.toFixed(2)} Lot</div>
+            </div>
+            <button 
+              onClick={handleFetchSignal}
+              disabled={isLoading || cooldown > 0}
+              className="px-6 py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-[10px] font-black rounded-2xl transition-all border border-slate-700"
+            >
+              {isLoading ? 'ANALYZING...' : cooldown > 0 ? `COOLDOWN ${cooldown}s` : 'REFRESH ANALYSIS'}
+            </button>
             <button 
               onClick={() => setIsMqlModalOpen(true)}
-              className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-black rounded-xl transition-all border border-slate-700 flex items-center gap-2"
+              className="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-black rounded-2xl transition-all shadow-xl shadow-yellow-500/10 flex items-center gap-2 group"
             >
-              Get Latest MQL5 Code
+              GET V2.2 COMPOUND CODE
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
             </button>
           </div>
         </div>
       </div>
 
-      <main className="relative max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-12 gap-8">
+      <main className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-8 space-y-8">
-          {/* Success Banner */}
-          <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/5 border border-green-500/30 p-8 rounded-3xl relative overflow-hidden group hover:border-green-500/50 transition-all">
-            <div className="absolute right-0 top-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-              <svg className="w-24 h-24 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            </div>
-            <h2 className="text-green-400 font-black text-2xl mb-2 flex items-center gap-3">
-              🎉 ระบบพร้อมทำกำไรแล้วครับ!
-            </h2>
-            <p className="text-slate-300 text-sm leading-relaxed max-w-2xl">
-              ตอนนี้บอทกำลังเฝ้ากราฟ <b>XAUUSD (M15)</b> ให้คุณอย่างใกล้ชิด <br/> 
-              เมื่อสัญญาณ RSI และราคาข้ามเส้น MA เข้าเงื่อนไข บอทจะเปิดไม้ 0.01 Lot และเก็บ 50 pips ทันทีตามที่คุณต้องการครับ
-            </p>
-            <div className="mt-6 flex gap-4">
-              <div className="bg-black/40 px-4 py-2 rounded-lg border border-white/5 text-[10px] font-bold text-slate-400">TARGET: $100.00 / DAY</div>
-              <div className="bg-black/40 px-4 py-2 rounded-lg border border-white/5 text-[10px] font-bold text-slate-400">LOT SIZE: 0.01 FIXED</div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <StrategyBattle />
+             <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500/5 blur-3xl rounded-full group-hover:bg-yellow-500/10 transition-all"></div>
+                <h2 className="text-yellow-500 font-black text-xl mb-4 flex items-center gap-3">
+                  🛡️ SAFE & SCALE V2.2
+                </h2>
+                <ul className="space-y-4 text-sm text-slate-400">
+                  <li className="flex gap-3">
+                    <span className="text-red-500 font-bold">●</span>
+                    <span><b>Initial Hard SL:</b> ป้องกันต้นทุนทันทีที่เปิดไม้</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="text-emerald-500 font-bold">●</span>
+                    <span><b>Auto-Compound:</b> ปรับ Lot ตามทุน (0.05 ต่อ $100)</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="text-blue-500 font-bold">●</span>
+                    <span><b>Re-Entry Rule:</b> รอสัญญาณชัดเจนหลังโดน SL เท่านั้น</span>
+                  </li>
+                </ul>
+             </div>
           </div>
-
-          <StatsPanel stats={stats} history={chartData} />
+          <StatsPanel stats={stats} history={[{name: 'Init', equity: 100}, {name: 'Target', equity: 200}]} />
         </div>
 
         <div className="xl:col-span-4 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-white font-black text-sm mb-4 flex items-center gap-2">
-              <span className="text-yellow-500">●</span> GEMINI LIVE INSIGHTS
-            </h3>
-            <SignalCard signal={signal} isLoading={isLoading} onRefresh={handleFetchSignal} />
+          <div className="bg-slate-900/50 border border-slate-800/50 rounded-[2rem] p-8 shadow-2xl backdrop-blur-md">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-white font-black text-sm flex items-center gap-3 uppercase tracking-widest">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full shadow-[0_0_10px_rgba(234,179,8,1)]"></span> 
+                Market Edge
+              </h3>
+              <div className="text-[10px] font-mono text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded">
+                REC: {recommendedLot.toFixed(2)} LOT
+              </div>
+            </div>
+            <SignalCard signal={signal} isLoading={isLoading} onRefresh={handleFetchSignal} showRefreshBtn={false} />
           </div>
-          
           <StrategyConsultant verdict={verdict} isLoading={isLoading} />
         </div>
       </main>
