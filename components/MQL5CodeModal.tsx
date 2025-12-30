@@ -142,15 +142,15 @@ bool HasOpenPosition() {
 
   return (
     <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl z-[100] flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-emerald-400/40 w-full max-w-6xl rounded-[3rem] shadow-[0_0_100px_rgba(16,185,129,0.3)] overflow-hidden flex flex-col max-h-[95vh]">
-        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 text-white">
+      <div className="bg-slate-900 border border-blue-400/40 w-full max-w-6xl rounded-[3rem] shadow-[0_0_100px_rgba(59,130,246,0.3)] overflow-hidden flex flex-col max-h-[95vh]">
+        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">🛡️</div>
+            <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(59,130,246,0.5)]">🚀</div>
             <div>
               <h2 className="text-3xl font-black uppercase tracking-tighter leading-none">
-                GoldMaster v5.5 <span className="text-emerald-400">PRO ELITE</span>
+                GoldMaster v5.5 <span className="text-blue-400">DEMO READY</span>
               </h2>
-              <span className="text-[10px] text-emerald-400/70 font-black uppercase tracking-[0.4em] mt-2 block animate-pulse">Ranking: Elite Tier (Professional Grade)</span>
+              <span className="text-[10px] text-blue-400/70 font-black uppercase tracking-[0.4em] mt-2 block animate-pulse">Mode: Sandbox Deployment</span>
             </div>
           </div>
           <button onClick={onClose} className="hover:bg-white/10 p-4 rounded-full transition-all group">
@@ -161,50 +161,50 @@ bool HasOpenPosition() {
         <div className="p-10 overflow-auto grid grid-cols-1 lg:grid-cols-5 gap-12 bg-[#010409]">
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-6">
-              <span className="text-emerald-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-                v5.5 PRO: MULTI-TIMEFRAME ENGINE
+              <span className="text-blue-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></span>
+                READY TO COPY & PASTE
               </span>
-              <span className="text-[10px] text-slate-500 font-mono">ENCRYPTED | TOP 5% ALGO</span>
+              <span className="text-[10px] text-slate-500 font-mono italic">TEST ON DEMO FIRST</span>
             </div>
             
-            <pre className="bg-black/90 p-8 rounded-[2rem] text-[11px] font-mono text-emerald-400/90 overflow-x-auto border border-emerald-500/10 h-[480px] mb-6 shadow-3xl scrollbar-thin scrollbar-thumb-emerald-500/20">
+            <pre className="bg-black/90 p-8 rounded-[2rem] text-[11px] font-mono text-blue-400/90 overflow-x-auto border border-blue-500/10 h-[480px] mb-6 shadow-3xl scrollbar-thin scrollbar-thumb-blue-500/20">
               {mql5Code}
             </pre>
             <button 
               onClick={copyToClipboard}
-              className="w-full py-8 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-lg font-black rounded-[2rem] shadow-[0_20px_50px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-5 active:scale-95 group overflow-hidden relative"
+              className="w-full py-8 bg-blue-500 hover:bg-blue-400 text-slate-950 text-lg font-black rounded-[2rem] shadow-[0_20px_50px_rgba(59,130,246,0.4)] transition-all flex items-center justify-center gap-5 active:scale-95 group overflow-hidden relative"
             >
-              <span className="relative z-10">{copied ? '✅ ELITE CODE SECURED' : '🚀 DEPLOY PRO v5.5 (ELITE TIER)'}</span>
+              <span className="relative z-10">{copied ? '✅ CODE COPIED! READY TO PASTE' : '📋 COPY SOURCE CODE (v5.5)'}</span>
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </button>
           </div>
 
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-blue-600/10 border border-blue-500/30 p-8 rounded-[2.5rem] relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 text-4xl">🧬</div>
-               <h4 className="text-blue-400 font-black text-sm uppercase flex items-center gap-3 mb-4 tracking-widest">
-                 MULTI-PAIR TRADING
+            <div className="bg-amber-600/10 border border-amber-500/30 p-8 rounded-[2.5rem] relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-6 opacity-10 text-4xl">⚠️</div>
+               <h4 className="text-amber-400 font-black text-sm uppercase flex items-center gap-3 mb-4 tracking-widest">
+                 IMPORTANT FOR DEMO
                </h4>
                <p className="text-slate-300 text-[12px] font-bold leading-relaxed italic">
-                "หากคุณต้องการเทรด <b>EUR/USD</b> เพิ่ม ให้เปิดกราฟใหม่แล้วเปลี่ยนค่า <b>Magic Number</b> ใน Settings เป็น 100551 เพื่อป้องกันบอทสับสนไม้เทรดกันครับ"
+                "ก่อนกดรัน ให้ตรวจสอบว่า <b>Auto Trading</b> เป็นสีเขียว และในช่อง <b>Common</b> ของบอท ได้ติ๊กถูกที่ <b>'Allow Algo Trading'</b> แล้วนะครับ"
                </p>
             </div>
 
             <div className="bg-slate-800/40 p-8 rounded-[2.5rem] border border-white/5 shadow-inner">
-              <div className="text-emerald-400 text-xs font-black mb-6 uppercase tracking-widest border-b border-white/5 pb-2">EUR/USD SETUP GUIDE</div>
+              <div className="text-blue-400 text-xs font-black mb-6 uppercase tracking-widest border-b border-white/5 pb-2 italic">MT5 SETUP QUICK-GUIDE</div>
               <ul className="text-[11px] text-slate-400 space-y-5">
                 <li className="flex gap-5">
                   <span className="text-blue-500 shrink-0 text-xl">1️⃣</span>
-                  <span><b>Symbol Selection:</b> เลือก EUR/USD ใน App นี้เพื่อวิเคราะห์ Sentiment ล่าสุด</span>
+                  <span><b>Symbol:</b> ลากบอทใส่กราฟ <b>XAUUSD</b> (ทองคำ)</span>
                 </li>
                 <li className="flex gap-5">
                   <span className="text-blue-500 shrink-0 text-xl">2️⃣</span>
-                  <span><b>Magic Number:</b> เปลี่ยนเป็น <b>100551</b> (หรือเลขอื่นที่ไม่ซ้ำกับทอง)</span>
+                  <span><b>Timeframe:</b> ปรับกราฟไปที่ <b>M15</b> (สำคัญมากสำหรับ SMC Logic)</span>
                 </li>
                 <li className="flex gap-5">
                   <span className="text-blue-500 shrink-0 text-xl">3️⃣</span>
-                  <span><b>Timeframe:</b> แนะนำ M15 สำหรับการเข้าออเดอร์ที่แม่นยำที่สุด</span>
+                  <span><b>Risk Check:</b> เริ่มต้นที่ 5% ตามโค้ดมาตรฐานเพื่อดูผลลัพธ์</span>
                 </li>
               </ul>
             </div>

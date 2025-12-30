@@ -20,7 +20,6 @@
         .font-mono {
             font-family: 'JetBrains Mono', monospace;
         }
-        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -36,7 +35,6 @@
         }
     </style>
     <script>
-        // Polyfill for process.env to prevent runtime crashes in browser
         if (typeof window.process === 'undefined') {
             window.process = { env: { API_KEY: '' } };
         }
@@ -56,7 +54,5 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- จุดที่แก้ไข: เพิ่มการเรียกใช้ไฟล์ index.tsx -->
-    <script type="module" src="./index.tsx"></script>
 </body>
 </html>

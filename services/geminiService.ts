@@ -1,8 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { MarketSignal, MarketSide, StrategyVerdict } from "../types.ts";
+import { MarketSignal, MarketSide, StrategyVerdict } from "../types";
 
-// Create AI instance using process.env.API_KEY directly as required by guidelines
 const getSafeAiInstance = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
@@ -74,7 +73,8 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
       },
     });
 
-    const data = JSON.parse(response.text);
+    const text = response.text || "{}";
+    const data = JSON.parse(text);
     return {
       signal: { ...data.signal, timestamp: Date.now(), side: data.signal.side as MarketSide },
       verdict: data.verdict,
