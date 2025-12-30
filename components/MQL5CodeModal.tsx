@@ -20,7 +20,7 @@ input double InpRiskPercent    = 5.0;     // Aggressive 5% Risk per Trade
 input int    InpMaxSpread      = 35;      // ต่ำกว่าเดิมเพื่อความคม (3.5 pips)
 input int    InpTradeStartHour = 13;      // London Open
 input int    InpTradeEndHour   = 22;      // NY Close
-input int    InpMagic          = 100550;  
+input int    InpMagic          = 100550;  // *** สำคัญ: เปลี่ยนเลขนี้หากเทรดหลายคู่พร้อมกัน ***
 
 //--- PRO SHIELD LOGIC
 input int    InpShieldStart    = 450;     // Safe Zone > 45 pips
@@ -182,29 +182,29 @@ bool HasOpenPosition() {
 
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-blue-600/10 border border-blue-500/30 p-8 rounded-[2.5rem] relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 text-4xl">🔬</div>
+               <div className="absolute top-0 right-0 p-6 opacity-10 text-4xl">🧬</div>
                <h4 className="text-blue-400 font-black text-sm uppercase flex items-center gap-3 mb-4 tracking-widest">
-                 THE ELITE DIFFERENCE
+                 MULTI-PAIR TRADING
                </h4>
                <p className="text-slate-300 text-[12px] font-bold leading-relaxed italic">
-                "สิ่งที่ทำให้คุณชนะ 90% ของคนในโลก คือการใช้ <b>Multi-Timeframe Confluence</b> เราจะไม่เข้าไม้ถ้า H1 และ M15 ไม่ไปทางเดียวกัน นี่คือวินัยระดับมืออาชีพครับ"
+                "หากคุณต้องการเทรด <b>EUR/USD</b> เพิ่ม ให้เปิดกราฟใหม่แล้วเปลี่ยนค่า <b>Magic Number</b> ใน Settings เป็น 100551 เพื่อป้องกันบอทสับสนไม้เทรดกันครับ"
                </p>
             </div>
 
             <div className="bg-slate-800/40 p-8 rounded-[2.5rem] border border-white/5 shadow-inner">
-              <div className="text-emerald-400 text-xs font-black mb-6 uppercase tracking-widest border-b border-white/5 pb-2">PRO v5.5 UPGRADES</div>
+              <div className="text-emerald-400 text-xs font-black mb-6 uppercase tracking-widest border-b border-white/5 pb-2">EUR/USD SETUP GUIDE</div>
               <ul className="text-[11px] text-slate-400 space-y-5">
                 <li className="flex gap-5">
-                  <span className="text-emerald-500 shrink-0 text-xl">🛰️</span>
-                  <span><b>H1-M15 Alignment:</b> กรองสัญญาณหลอกได้ดีขึ้น 40%</span>
+                  <span className="text-blue-500 shrink-0 text-xl">1️⃣</span>
+                  <span><b>Symbol Selection:</b> เลือก EUR/USD ใน App นี้เพื่อวิเคราะห์ Sentiment ล่าสุด</span>
                 </li>
                 <li className="flex gap-5">
-                  <span className="text-emerald-500 shrink-0 text-xl">⚖️</span>
-                  <span><b>Balanced R:R:</b> ปรับเป้าหมายเป็น 1:3.5 เพื่อเร่งการเติบโตแบบก้าวกระโดด</span>
+                  <span className="text-blue-500 shrink-0 text-xl">2️⃣</span>
+                  <span><b>Magic Number:</b> เปลี่ยนเป็น <b>100551</b> (หรือเลขอื่นที่ไม่ซ้ำกับทอง)</span>
                 </li>
                 <li className="flex gap-5">
-                  <span className="text-emerald-500 shrink-0 text-xl">🌪️</span>
-                  <span><b>News Buffer:</b> เพิ่มระยะ SL อีก 50 จุด เพื่อป้องกันความผันผวนของข่าว</span>
+                  <span className="text-blue-500 shrink-0 text-xl">3️⃣</span>
+                  <span><b>Timeframe:</b> แนะนำ M15 สำหรับการเข้าออเดอร์ที่แม่นยำที่สุด</span>
                 </li>
               </ul>
             </div>

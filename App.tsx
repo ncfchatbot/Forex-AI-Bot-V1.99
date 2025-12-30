@@ -11,6 +11,8 @@ import StrategyExplorer from './components/StrategyExplorer.tsx';
 import MarketRanker from './components/MarketRanker.tsx';
 import IncomeForecast from './components/IncomeForecast.tsx';
 import RiskBreakdown from './components/RiskBreakdown.tsx';
+import IntegrationGuide from './components/IntegrationGuide.tsx';
+import DailyRoutine from './components/DailyRoutine.tsx';
 
 const App: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('XAU/USD');
@@ -128,6 +130,8 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
           <div className="xl:col-span-8 space-y-16">
             <IncomeForecast balance={stats.balance} />
+            <IntegrationGuide />
+            <DailyRoutine />
             <MarketRanker currentSymbol={selectedSymbol} onSelectSymbol={changeSymbol} />
             <RiskBreakdown />
 
