@@ -2,9 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MarketSignal, MarketSide, StrategyVerdict } from "../types.ts";
 
+// Create AI instance using process.env.API_KEY directly as required by guidelines
 const getSafeAiInstance = () => {
-  const apiKey = (typeof process !== 'undefined' && process.env ? process.env.API_KEY : '') || '';
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
 export interface UnifiedAnalysis {
