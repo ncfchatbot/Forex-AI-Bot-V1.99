@@ -1,9 +1,9 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { MarketSignal, MarketSide, StrategyVerdict } from "../types";
+import { MarketSignal, MarketSide, StrategyVerdict } from "../types.ts";
 
 const getSafeAiInstance = () => {
-  const apiKey = process.env.API_KEY || '';
+  const apiKey = (typeof process !== 'undefined' && process.env ? process.env.API_KEY : '') || '';
   return new GoogleGenAI({ apiKey });
 };
 
@@ -38,7 +38,7 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
       2. Market Structure: Identify current BOS (Break of Structure) or CHoCH.
       3. Safety: Suggest a Trailing Shield distance to protect the aggressive 5% risk model.
       4. Risk Model: For a $${capital} account, recommend a Lot size for a fixed 5% AGGRESSIVE risk per trade.
-      5. Strategy: Final v5.0 Ultra Elite with Hyper-Compounding logic.
+      5. Strategy: Final v5.5 Ultra Elite with Hyper-Compounding logic.
 
       Return JSON with signal, verdict, and recommendedLot.`,
       config: {
@@ -93,7 +93,7 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
       },
       verdict: {
         successProbability: 85, riskOfRuin: 5, 
-        verdict: `v5.0 Aggressive Logic is scanning for liquidity sweeps.`,
+        verdict: `v5.5 Aggressive Logic is scanning for liquidity sweeps.`,
         suggestions: ["Wait for BOS confirmation", "5% Risk Model Ready", "Trailing Shield Primed"]
       },
       recommendedLot: 0.10 

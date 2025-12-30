@@ -1,16 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { MarketSignal, AccountStats, StrategyVerdict } from './types';
-import { getUnifiedAnalysis } from './services/geminiService';
-import SignalCard from './components/SignalCard';
-import StatsPanel from './components/StatsPanel';
-import MQL5CodeModal from './components/MQL5CodeModal';
-import StrategyConsultant from './components/StrategyConsultant';
-import StrategyBattle from './components/StrategyBattle';
-import StrategyExplorer from './components/StrategyExplorer';
-import MarketRanker from './components/MarketRanker';
-import IncomeForecast from './components/IncomeForecast';
-import RiskBreakdown from './components/RiskBreakdown';
+import { MarketSignal, AccountStats, StrategyVerdict } from './types.ts';
+import { getUnifiedAnalysis } from './services/geminiService.ts';
+import SignalCard from './components/SignalCard.tsx';
+import StatsPanel from './components/StatsPanel.tsx';
+import MQL5CodeModal from './components/MQL5CodeModal.tsx';
+import StrategyConsultant from './components/StrategyConsultant.tsx';
+import StrategyBattle from './components/StrategyBattle.tsx';
+import StrategyExplorer from './components/StrategyExplorer.tsx';
+import MarketRanker from './components/MarketRanker.tsx';
+import IncomeForecast from './components/IncomeForecast.tsx';
+import RiskBreakdown from './components/RiskBreakdown.tsx';
 
 const App: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('XAU/USD');
@@ -39,7 +39,7 @@ const App: React.FC = () => {
       setRecommendedLot(result.recommendedLot);
       setCooldown(30);
     } catch (e) {
-      console.error(e);
+      console.error("Fetch Signal Error:", e);
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +107,7 @@ const App: React.FC = () => {
               onClick={() => setIsMqlModalOpen(true)}
               className="px-12 py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-black rounded-[2rem] transition-all shadow-[0_20px_45px_rgba(16,185,129,0.4)] flex items-center gap-4 active:scale-95 group relative overflow-hidden"
             >
-              <span className="relative z-10">🚀 DEPLOY v5.0 FINAL ALGORITHM</span>
+              <span className="relative z-10">🚀 DEPLOY v5.5 FINAL ALGORITHM</span>
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </button>
           </div>
@@ -115,7 +115,6 @@ const App: React.FC = () => {
       </div>
 
       <main className="max-w-7xl mx-auto px-8 py-16">
-        {/* Aggressive Protocol Status */}
         <div className="bg-gradient-to-r from-emerald-500/5 via-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-5 rounded-[2rem] mb-12 flex flex-wrap items-center justify-center gap-10 text-[11px] font-black text-emerald-400 uppercase tracking-[0.3em] italic shadow-2xl">
            <div className="flex items-center gap-3"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> High-Frequency Analysis Active</div>
            <div className="opacity-20">|</div>
@@ -137,7 +136,7 @@ const App: React.FC = () => {
                   <div className="absolute top-0 right-0 p-12 text-emerald-500/5 text-9xl font-black group-hover:text-emerald-500/10 transition-all italic uppercase pointer-events-none">ELITE</div>
                   <h2 className="text-white font-black text-2xl mb-10 flex items-center gap-5">
                     <span className="w-14 h-14 bg-emerald-500/10 rounded-[1.5rem] flex items-center justify-center text-2xl">🛡️</span>
-                    WEALTH CORE v5.0
+                    WEALTH CORE v5.5
                   </h2>
                   <div className="space-y-10">
                     <div className="flex items-start gap-6">
@@ -145,7 +144,7 @@ const App: React.FC = () => {
                       <div>
                         <div className="text-lg font-black text-white uppercase tracking-tighter italic">Precision Aggression</div>
                         <div className="text-[13px] text-slate-500 mt-3 leading-relaxed italic">
-                          "ในเวอร์ชัน 5.0 บอทจะโฟกัสการเข้าไม้ที่ดุดัน 5% Risk เพื่อผลตอบแทนสูงสุดภายใต้โครงสร้าง SMC ที่แข็งแกร่งที่สุดเท่านั้น"
+                          "ในเวอร์ชัน 5.5 ระบบถูกปรับจูนให้มองข้ามความผันผวนระยะสั้นและโฟกัสที่จุดเก็บกำไรคุณภาพสูงเท่านั้น"
                         </div>
                       </div>
                     </div>
@@ -163,7 +162,7 @@ const App: React.FC = () => {
               <div className="flex justify-between items-center mb-12 relative z-10">
                 <h3 className="text-white font-black text-xs flex items-center gap-4 uppercase tracking-[0.3em]">
                   <span className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_20px_rgba(16,185,129,1)] animate-pulse"></span> 
-                  HYPER SCAN v5.0
+                  HYPER SCAN v5.5
                 </h3>
                 <div className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-5 py-2.5 rounded-full border border-emerald-500/30 italic">
                   {cooldown > 0 ? `SYNCING ${cooldown}S` : 'READY'}
@@ -188,11 +187,6 @@ const App: React.FC = () => {
                   <div>
                     <div className="text-slate-500 text-[10px] uppercase font-black mb-2 tracking-widest">Risk Model</div>
                     <div className="text-emerald-400 font-mono font-black text-lg italic">5.0% FIXED</div>
-                  </div>
-               </div>
-               <div className="pt-8 border-t border-white/10">
-                  <div className="text-slate-400 text-[12px] font-bold italic leading-relaxed">
-                    *ผลลัพธ์สูงสุดต้องการวินัยเหล็กและการปล่อยให้ระบบจัดการตัวเอง 100% ครับ
                   </div>
                </div>
             </div>
