@@ -2,87 +2,80 @@
 import React, { useState } from 'react';
 
 const VPSAdvisor: React.FC = () => {
-  const [step, setStep] = useState<'DEPLOY' | 'DONE'>('DEPLOY');
+  const [step, setStep] = useState<'DEPLOY' | 'DONE'>('DONE'); // ตั้งค่าเริ่มต้นเป็น DONE เพราะผู้ใช้รันเสร็จแล้ว
 
   const userIP = "188.137.179.13";
-  // The complete manual setup script
-  const installScript = "apt update && apt install -y xfce4 xfce4-goodies xrdp wine64 && echo 'xfce4-session' > ~/.xsession && systemctl enable xrdp && systemctl start xrdp && wget https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe";
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(installScript);
-    alert("คัดลอกคำสั่งเรียบร้อย! นำไปวางในหน้าจอดำ (Terminal) ได้เลยครับ");
-  };
 
   if (step === 'DEPLOY') {
     return (
       <div className="bg-slate-900/95 border-4 border-red-500 rounded-[3rem] p-10 shadow-[0_0_100px_rgba(239,68,68,0.3)] backdrop-blur-3xl mt-12 overflow-hidden relative">
         <div className="absolute top-8 right-8 text-[10px] text-red-400 font-black uppercase italic tracking-widest animate-pulse">Mode: Manual Override</div>
         <h3 className="text-white font-black text-3xl uppercase tracking-tighter italic mb-10">MT5 <span className="text-red-500">Power Command</span></h3>
-        
-        <div className="space-y-8">
-           <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-3xl flex items-center gap-6 border-l-8 border-l-red-500">
-             <div className="text-3xl">🔑</div>
-             <div className="text-xs text-red-200 italic font-bold leading-relaxed">
-               <span className="text-white font-black uppercase block mb-1">ก๊อปปี้คำสั่งด้านล่างนี้ครับ</span>
-               เมื่อรันเสร็จ Server จะเปลี่ยนเป็นหน้าจอ Desktop (GUI) ทันที <br/>
-               และจะโหลดตัวติดตั้ง MT5 มารอไว้ให้คุณครับ
-             </div>
-           </div>
-
-           <div className="w-full">
-             <div className="group relative">
-               <div className="bg-black/80 p-8 rounded-[2rem] border border-red-500/50 font-mono text-red-300 text-[12px] shadow-inner flex flex-col gap-6">
-                 <code className="break-all leading-relaxed whitespace-pre-wrap">{installScript}</code>
-                 <button 
-                   onClick={copyToClipboard}
-                   className="w-full py-5 bg-red-600 hover:bg-red-500 text-white text-sm font-black uppercase rounded-xl transition-all shadow-lg active:scale-95 shadow-red-900/40 flex items-center justify-center gap-3"
-                 >
-                   <span>📋 COPY THIS COMMAND</span>
-                 </button>
-               </div>
-             </div>
-             
-             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-[10px] text-slate-400 italic">
-                  <b className="text-white block mb-1">1. PASTE & ENTER</b>
-                  วางคำสั่งใน Terminal แล้วกด Enter ทันที
-                </div>
-                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-[10px] text-slate-400 italic">
-                  <b className="text-white block mb-1">2. WAIT 5 MINS</b>
-                  ระบบจะติดตั้งหน้าจอ Desktop ให้ ใช้เวลาสักครู่
-                </div>
-                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-[10px] text-slate-400 italic">
-                  <b className="text-white block mb-1">3. PRESS ENTER</b>
-                  ถ้ามีหน้าจอสีฟ้าถามอะไร ให้กด Enter ผ่านได้เลย
-                </div>
-             </div>
-           </div>
-        </div>
-
         <button 
           onClick={() => setStep('DONE')}
           className="mt-12 w-full py-8 bg-indigo-500 hover:bg-indigo-400 text-white font-black text-lg uppercase rounded-[2rem] transition-all shadow-xl active:scale-95 shadow-indigo-500/20"
         >
-          ตัวหนังสือหยุดวิ่งแล้ว ➔ ขั้นตอนสุดท้าย
+          ติดตั้งสมบูรณ์แล้ว ➔ เข้าสู่ระบบรีโมท
         </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-900/95 border-4 border-emerald-500 rounded-[3rem] p-12 shadow-[0_0_100px_rgba(16,185,129,0.2)] backdrop-blur-3xl mt-12 text-center">
-      <div className="text-6xl mb-8 animate-bounce">🛡️</div>
-      <h3 className="text-white font-black text-3xl uppercase tracking-tighter italic mb-6">Server is <span className="text-emerald-400">Live</span></h3>
-      <p className="text-slate-400 text-sm italic leading-relaxed mb-10 px-10">
-        ยินดีด้วยครับ! ตอนนี้คุณสามารถรีโมทเข้าไปติดตั้งบอทได้แล้ว <br/><br/>
-        <b>ขั้นตอนสุดท้าย:</b> <br/>
-        1. เปิด <b>Remote Desktop Connection</b> ในคอมคุณ <br/>
-        2. ใส่ IP: <b className="text-emerald-400">{userIP}</b> <br/>
-        3. User: <b className="text-white">root</b> และรหัสผ่านของคุณ <br/>
-        4. เมื่อเข้าหน้าจอได้แล้ว จะเจอไฟล์ <b className="text-emerald-400">mt5setup.exe</b> ให้ดับเบิลคลิกติดตั้งครับ!
-      </p>
-      <div className="p-8 bg-emerald-500/10 border border-emerald-500/20 rounded-[2.5rem] inline-block">
-        <span className="text-emerald-400 font-black text-xs uppercase tracking-[0.3em]">Status: Ready for GUI Connection</span>
+    <div className="bg-slate-900/95 border-4 border-emerald-500 rounded-[3rem] p-12 shadow-[0_0_100px_rgba(16,185,129,0.3)] backdrop-blur-3xl mt-12 relative overflow-hidden">
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 blur-[80px] rounded-full"></div>
+      
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 bg-emerald-500 rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-6 shadow-2xl shadow-emerald-500/40 animate-bounce">
+          🖥️
+        </div>
+        <h3 className="text-white font-black text-4xl uppercase tracking-tighter italic">Server is <span className="text-emerald-400">READY</span></h3>
+        <p className="text-emerald-500/60 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Remote Access Environment Activated</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        <div className="bg-black/40 p-8 rounded-[2.5rem] border border-white/5">
+          <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Remote Credentials</div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <span className="text-slate-400 text-xs">IP Address</span>
+              <span className="text-white font-mono font-bold">{userIP}</span>
+            </div>
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <span className="text-slate-400 text-xs">Username</span>
+              <span className="text-white font-mono font-bold">root</span>
+            </div>
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <span className="text-slate-400 text-xs">Password</span>
+              <span className="text-emerald-400 text-[10px] italic">รหัสที่คุณได้รับจากผู้ให้บริการ</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-emerald-500/5 p-8 rounded-[2.5rem] border border-emerald-500/20">
+          <div className="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-4">Next Step: Inside Remote Desktop</div>
+          <ul className="text-xs text-slate-300 space-y-3 italic leading-relaxed">
+            <li className="flex gap-3">
+              <span className="text-emerald-500 font-black">1.</span>
+              <span>ดับเบิลคลิกไฟล์ <b>mt5setup.exe</b> ในหน้าจอ VPS</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-emerald-500 font-black">2.</span>
+              <span>ติดตั้งตามปกติ (Next -> Next) จนจบ</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-emerald-500 font-black">3.</span>
+              <span>เปิด MT5 ขึ้นมา แล้วนำ <b>Elite MQL5 Code</b> จากแอปนี้ไปวางครับ</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="p-6 bg-white/5 rounded-3xl border border-white/5 flex items-center gap-6">
+        <div className="text-2xl">💡</div>
+        <p className="text-slate-400 text-[11px] italic">
+          <b>Pro Tip:</b> ขณะอยู่ในหน้าจอรีโมท ถ้าตัวอักษรเล็กเกินไป คุณสามารถปรับความละเอียด (Resolution) ในตั้งค่าของโปรแกรม Remote Desktop ก่อนเชื่อมต่อได้ครับ
+        </p>
       </div>
     </div>
   );
