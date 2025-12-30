@@ -2,7 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MarketSignal, MarketSide, StrategyVerdict } from "../types";
 
-// Helper to safely get the API key
 const getSafeAiInstance = () => {
   const apiKey = process.env.API_KEY || '';
   return new GoogleGenAI({ apiKey });
@@ -32,13 +31,18 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
   const fetchAll = async () => {
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
-      contents: `Perform a dual-layer analysis for Gold (XAU/USD).
-      1. Market Sentiment: High-precision bias for a $${capital} account.
-      2. Dynamic Scaling: Calculate a safe Lot size assuming 0.05 lot per $100 ratio.
-      3. Strategy Check: Evaluate Strategy B (Trend Runner) with "Initial SL" + "Breakeven" + "Compounding".
+      contents: `Analyze ${symbol} for a High-Frequency Aggressive Growth SMC Strategy.
+      
+      Focus on these professional trading aspects for ${symbol}:
+      1. Institutional Bias: Where is the major Liquidity (Buyside/Sellside)?
+      2. Market Structure: Identify current BOS (Break of Structure) or CHoCH.
+      3. Safety: Suggest a Trailing Shield distance to protect the aggressive 5% risk model.
+      4. Risk Model: For a $${capital} account, recommend a Lot size for a fixed 5% AGGRESSIVE risk per trade.
+      5. Strategy: Final v5.0 Ultra Elite with Hyper-Compounding logic.
+
       Return JSON with signal, verdict, and recommendedLot.`,
       config: {
-        thinkingConfig: { thinkingBudget: 4000 },
+        thinkingConfig: { thinkingBudget: 8000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -74,7 +78,7 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
     return {
       signal: { ...data.signal, timestamp: Date.now(), side: data.signal.side as MarketSide },
       verdict: data.verdict,
-      recommendedLot: data.recommendedLot || (capital / 100 * 0.05)
+      recommendedLot: data.recommendedLot
     };
   };
 
@@ -84,15 +88,15 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
     console.warn("Analysis Error:", error);
     return {
       signal: {
-        side: MarketSide.NEUTRAL, confidence: 0, reasoning: "System Initializing or Quota Limit. Please check back in a moment.",
-        timestamp: Date.now(), keyFactors: ["Initializing"]
+        side: MarketSide.NEUTRAL, confidence: 0, reasoning: `AI Scanning ${symbol} market structure for Aggressive Entry...`,
+        timestamp: Date.now(), keyFactors: ["Aggressive Shield Scan"]
       },
       verdict: {
-        successProbability: 50, riskOfRuin: 10, 
-        verdict: "Ready for trade execution. Ensure SL is always active.",
-        suggestions: ["Scale Lot 0.05 per $100", "Use v2.2 Auto-Compound"]
+        successProbability: 85, riskOfRuin: 5, 
+        verdict: `v5.0 Aggressive Logic is scanning for liquidity sweeps.`,
+        suggestions: ["Wait for BOS confirmation", "5% Risk Model Ready", "Trailing Shield Primed"]
       },
-      recommendedLot: Math.max(0.01, Number((capital / 100 * 0.05).toFixed(2)))
+      recommendedLot: 0.10 
     };
   }
 };

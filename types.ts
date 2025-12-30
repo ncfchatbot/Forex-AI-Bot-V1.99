@@ -40,3 +40,20 @@ export interface AccountStats {
   winRate: number;
   totalTrades: number;
 }
+
+export interface AdvancedStrategy {
+  name: string;
+  concept: string;
+  winRate: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  pros: string[];
+  cons: string[];
+  efficiencyScore: number;
+}
+
+export interface IncomeForecast {
+  monthlyReturn: number;
+  maxDrawdown: number;
+  expectedProfit: number;
+  safetyScore: number;
+}
