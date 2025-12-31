@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MarketSignal, AccountStats, StrategyVerdict } from './types';
+import { MarketSignal, AccountStats, StrategyVerdict, MarketSide } from './types';
 import { getUnifiedAnalysis } from './services/geminiService';
 import SignalCard from './components/SignalCard';
 import StatsPanel from './components/StatsPanel';
@@ -23,13 +23,12 @@ const App: React.FC = () => {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [signal, setSignal] = useState<MarketSignal | null>(null);
   const [verdict, setVerdict] = useState<StrategyVerdict | null>(null);
-  const [recommendedLot, setRecommendedLot] = useState<number>(0.00);
   const [isLoading, setIsLoading] = useState(false);
   const [isMqlModalOpen, setIsMqlModalOpen] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [isAiFallback, setIsAiFallback] = useState(false);
 
-  const [stats, setStats] = useState<AccountStats>({
+  const [stats] = useState<AccountStats>({
     balance: 100000.00,
     equity: 100000.00,
     dailyProfit: 0.00,
@@ -44,11 +43,18 @@ const App: React.FC = () => {
       const result = await getUnifiedAnalysis(symbol, stats.balance);
       setSignal(result.signal);
       setVerdict(result.verdict);
-      setRecommendedLot(result.recommendedLot);
       setIsAiFallback(!!result.isFallback);
-      setCooldown(45); // เพิ่ม Cooldown เพื่อประหยัดโควต้า
+      setCooldown(45);
     } catch (e) {
-      console.error("Critical Fetch Error:", e);
+      console.error("Fetch Error:", e);
+      // Fail-safe default
+      setSignal({
+        side: MarketSide.NEUTRAL,
+        confidence: 0,
+        reasoning: "Awaiting Market Synchronization...",
+        timestamp: Date.now(),
+        keyFactors: ["Network Sync"]
+      });
     } finally {
       setIsLoading(false);
     }
@@ -61,13 +67,12 @@ const App: React.FC = () => {
   };
 
   useEffect(() => { 
-    const loader = document.getElementById('boot-loader');
-    if (loader) {
-      loader.style.opacity = '0';
-      setTimeout(() => {
-        loader.style.display = 'none';
-      }, 500);
+    // Fix: Using (window as any) to bypass TypeScript error for property 'hideAppLoader' which is injected globally.
+    if ((window as any).hideAppLoader) {
+      (window as any).hideAppLoader();
     }
+    
+    // ค่อยๆ โหลดข้อมูลตามหลังมา
     handleFetchSignal();
   }, []);
 
@@ -82,7 +87,6 @@ const App: React.FC = () => {
     <div className={`min-h-screen pb-32 transition-colors duration-700 ${isDemoMode ? 'bg-[#050b18]' : 'bg-[#02040a]'}`}>
       <MQL5CodeModal isOpen={isMqlModalOpen} onClose={() => setIsMqlModalOpen(false)} />
       
-      {/* AI Network Status Bar */}
       {isAiFallback && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 text-center text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] animate-pulse relative z-50 italic">
           ⚠️ AI Network Traffic High - Running on Local Predictive Cache
@@ -160,7 +164,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="xl:col-span-4 space-y-12">
-            <div className={`bg-slate-900/50 border rounded-[3.5rem] p-12 shadow-3xl backdrop-blur-3xl relative overflow-hidden transition-colors ${isAiFallback ? 'border-amber-500/20' : isDemoMode ? 'border-blue-500/20' : 'border-white/10'}`}>
+            <div className={`bg-slate-900/50 border rounded-[3.5rem] p-12 shadow-3xl backdrop-blur-3xl relative overflow-hidden transition-all ${isAiFallback ? 'border-amber-500/20' : isDemoMode ? 'border-blue-500/20' : 'border-white/10'}`}>
               <div className="flex justify-between items-center mb-12 relative z-10">
                 <h3 className="text-white font-black text-xs flex items-center gap-4 uppercase tracking-[0.3em]"><span className={`w-3 h-3 rounded-full shadow-2xl animate-pulse ${isAiFallback ? 'bg-amber-500' : isDemoMode ? 'bg-blue-500' : 'bg-emerald-500'}`}></span> HYPER SCAN v5.5</h3>
                 <div className={`text-[10px] font-black px-5 py-2.5 rounded-full border italic ${isAiFallback ? 'text-amber-500 border-amber-500/30' : isDemoMode ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'}`}>{cooldown > 0 ? `SYNCING ${cooldown}S` : 'READY'}</div>

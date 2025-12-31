@@ -48,7 +48,34 @@
             max-width: 80%;
         }
         #boot-loader {
-            transition: opacity 0.5s ease-out;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #02040a;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+        }
+        #force-skip-btn {
+            display: none;
+            margin-top: 2rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+            padding: 0.75rem 1.5rem;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #force-skip-btn:hover {
+            background: #3b82f6;
+            color: white;
         }
     </style>
     <script>
@@ -56,21 +83,32 @@
         if (typeof window.process === 'undefined') {
             window.process = { env: { API_KEY: '' } };
         }
-        
-        // Global Error Handler to catch "Black Screen" causes
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('App Error Detected:', msg, url, lineNo);
-            const errorDiv = document.getElementById('app-error');
-            if (errorDiv) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `
-                    <h2 style="color: #ef4444; font-weight: 900; margin-bottom: 1rem;">⚠️ SYSTEM CRASH DETECTED</h2>
-                    <p style="font-size: 12px; color: #94a3b8; font-family: monospace;">${msg}</p>
-                    <button onclick="location.reload()" style="margin-top: 1.5rem; background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer;">
-                        RELOAD SYSTEM
-                    </button>
-                `;
+
+        // Global function to hide loader
+        window.hideAppLoader = function() {
+            const loader = document.getElementById('boot-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 800);
             }
+        };
+        
+        // Auto-hide after 6 seconds as a final safety net
+        setTimeout(window.hideAppLoader, 6000);
+
+        // Show skip button after 3 seconds
+        setTimeout(() => {
+            const btn = document.getElementById('force-skip-btn');
+            if (btn) btn.style.display = 'block';
+        }, 3000);
+
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('App Error:', msg);
+            // If there's an error, still try to hide loader so user can see something
+            window.hideAppLoader();
             return false;
         };
     </script>
@@ -89,12 +127,12 @@
 </script>
 </head>
 <body>
-    <div id="root">
-        <!-- Initial Loading State -->
-        <div id="boot-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; background: #02040a; position: fixed; inset: 0; z-index: 100;">
-            <div style="width: 50px; height: 50px; border: 4px solid #1e293b; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5em; color: #3b82f6; font-weight: 900;">BOOTING GOLDMASTER v5.5</div>
-        </div>
+    <div id="root"></div>
+    <!-- Initial Loading State Moved Outside Root for stability -->
+    <div id="boot-loader">
+        <div style="width: 50px; height: 50px; border: 4px solid #1e293b; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5em; color: #3b82f6; font-weight: 900; margin-top: 1rem;">BOOTING GOLDMASTER v5.5</div>
+        <button id="force-skip-btn" onclick="window.hideAppLoader()">ENTER DASHBOARD MANUALLY</button>
     </div>
     <div id="app-error"></div>
     <style>
