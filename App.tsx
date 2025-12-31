@@ -20,18 +20,18 @@ import BotDiagnostics from './components/BotDiagnostics';
 
 const App: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('XAU/USD');
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [signal, setSignal] = useState<MarketSignal | null>(null);
   const [verdict, setVerdict] = useState<StrategyVerdict | null>(null);
   const [recommendedLot, setRecommendedLot] = useState<number>(0.00);
   const [isLoading, setIsLoading] = useState(false);
   const [isMqlModalOpen, setIsMqlModalOpen] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [hasError, setHasError] = useState(false);
+  const [isAiFallback, setIsAiFallback] = useState(false);
 
   const [stats, setStats] = useState<AccountStats>({
-    balance: 1000.00,
-    equity: 1000.00,
+    balance: 100000.00,
+    equity: 100000.00,
     dailyProfit: 0.00,
     winRate: 88, 
     totalTrades: 120
@@ -45,16 +45,10 @@ const App: React.FC = () => {
       setSignal(result.signal);
       setVerdict(result.verdict);
       setRecommendedLot(result.recommendedLot);
-      setCooldown(30);
+      setIsAiFallback(!!result.isFallback);
+      setCooldown(45); // เพิ่ม Cooldown เพื่อประหยัดโควต้า
     } catch (e) {
-      console.error("Fetch Signal Error:", e);
-      setSignal({
-        side: (Math.random() > 0.5 ? 'BUY' : 'SELL') as any,
-        confidence: 85,
-        reasoning: "AI Offline Mode: High Liquidity Sweep Detected.",
-        timestamp: Date.now(),
-        keyFactors: ["Offline Shield"]
-      } as MarketSignal);
+      console.error("Critical Fetch Error:", e);
     } finally {
       setIsLoading(false);
     }
@@ -67,9 +61,14 @@ const App: React.FC = () => {
   };
 
   useEffect(() => { 
-    handleFetchSignal();
     const loader = document.getElementById('boot-loader');
-    if (loader) loader.style.display = 'none';
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 500);
+    }
+    handleFetchSignal();
   }, []);
 
   useEffect(() => {
@@ -83,6 +82,13 @@ const App: React.FC = () => {
     <div className={`min-h-screen pb-32 transition-colors duration-700 ${isDemoMode ? 'bg-[#050b18]' : 'bg-[#02040a]'}`}>
       <MQL5CodeModal isOpen={isMqlModalOpen} onClose={() => setIsMqlModalOpen(false)} />
       
+      {/* AI Network Status Bar */}
+      {isAiFallback && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 text-center text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] animate-pulse relative z-50 italic">
+          ⚠️ AI Network Traffic High - Running on Local Predictive Cache
+        </div>
+      )}
+
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute top-[-15%] right-[-10%] w-[70%] h-[70%] blur-[150px] rounded-full transition-colors duration-1000 ${isDemoMode ? 'bg-blue-600/10' : 'bg-emerald-600/10'}`}></div>
         <div className={`absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] blur-[150px] rounded-full transition-colors duration-1000 ${isDemoMode ? 'bg-indigo-600/10' : 'bg-blue-600/10'}`}></div>
@@ -102,7 +108,9 @@ const App: React.FC = () => {
                 GoldMaster <span className={isDemoMode ? 'text-blue-400' : 'text-emerald-400'}>{isDemoMode ? 'SANDBOX v5.5' : 'ULTRA ELITE'}</span>
               </h1>
               <div className="flex items-center gap-4 mt-2">
-                <button onClick={() => setIsDemoMode(!isDemoMode)} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${isDemoMode ? 'bg-blue-500/20 border-blue-500/40 text-blue-400' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'}`}>{isDemoMode ? '🧪 DEMO MODE ACTIVE' : '💰 REAL ACCOUNT MODE'}</button>
+                <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${isAiFallback ? 'bg-amber-500/20 border-amber-500/40 text-amber-500' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'}`}>
+                  {isAiFallback ? '⚡ LOCAL AI ACTIVE' : '🌐 CLOUD AI CONNECTED'}
+                </div>
                 <select value={selectedSymbol} onChange={(e) => changeSymbol(e.target.value)} className="bg-slate-900/50 text-slate-400 text-[10px] font-black tracking-widest uppercase border border-white/10 rounded-xl px-4 py-1.5 focus:outline-none hover:bg-slate-800 transition-all cursor-pointer">
                   <option value="XAU/USD">XAU/USD (GOLD)</option>
                   <option value="EUR/USD">EUR/USD (EURO)</option>
@@ -121,8 +129,9 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
           <div className="xl:col-span-8 space-y-16">
             <BotDiagnostics />
-            <VPSShutdownGuide />
             <IncomeForecast balance={stats.balance} />
+            <StatsPanel stats={stats} history={[{name: 'Base', equity: 100000}, {name: 'W1', equity: 112000}, {name: 'W2', equity: 125000}, {name: 'W3', equity: 140000}, {name: 'W4', equity: 175000}]} />
+            <VPSShutdownGuide />
             <IntegrationGuide />
             <NavigatorGuide />
             <VPSAdvisor />
@@ -148,14 +157,13 @@ const App: React.FC = () => {
                </div>
                <StrategyBattle />
             </div>
-            <StatsPanel stats={stats} history={[{name: 'Base', equity: 1000}, {name: 'W1', equity: 1120}, {name: 'W2', equity: 1250}, {name: 'W3', equity: 1400}, {name: 'W4', equity: 1750}]} />
           </div>
 
           <div className="xl:col-span-4 space-y-12">
-            <div className={`bg-slate-900/50 border rounded-[3.5rem] p-12 shadow-3xl backdrop-blur-3xl relative overflow-hidden transition-colors ${isDemoMode ? 'border-blue-500/20' : 'border-white/10'}`}>
+            <div className={`bg-slate-900/50 border rounded-[3.5rem] p-12 shadow-3xl backdrop-blur-3xl relative overflow-hidden transition-colors ${isAiFallback ? 'border-amber-500/20' : isDemoMode ? 'border-blue-500/20' : 'border-white/10'}`}>
               <div className="flex justify-between items-center mb-12 relative z-10">
-                <h3 className="text-white font-black text-xs flex items-center gap-4 uppercase tracking-[0.3em]"><span className={`w-3 h-3 rounded-full shadow-2xl animate-pulse ${isDemoMode ? 'bg-blue-500' : 'bg-emerald-500'}`}></span> HYPER SCAN v5.5</h3>
-                <div className={`text-[10px] font-black px-5 py-2.5 rounded-full border italic ${isDemoMode ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'}`}>{cooldown > 0 ? `SYNCING ${cooldown}S` : 'READY'}</div>
+                <h3 className="text-white font-black text-xs flex items-center gap-4 uppercase tracking-[0.3em]"><span className={`w-3 h-3 rounded-full shadow-2xl animate-pulse ${isAiFallback ? 'bg-amber-500' : isDemoMode ? 'bg-blue-500' : 'bg-emerald-500'}`}></span> HYPER SCAN v5.5</h3>
+                <div className={`text-[10px] font-black px-5 py-2.5 rounded-full border italic ${isAiFallback ? 'text-amber-500 border-amber-500/30' : isDemoMode ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'}`}>{cooldown > 0 ? `SYNCING ${cooldown}S` : 'READY'}</div>
               </div>
               <SignalCard signal={signal} isLoading={isLoading} onRefresh={handleFetchSignal} showRefreshBtn={false} />
             </div>

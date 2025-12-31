@@ -47,6 +47,9 @@
             text-align: center;
             max-width: 80%;
         }
+        #boot-loader {
+            transition: opacity 0.5s ease-out;
+        }
     </style>
     <script>
         // Safety Shim
@@ -88,7 +91,7 @@
 <body>
     <div id="root">
         <!-- Initial Loading State -->
-        <div id="boot-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem;">
+        <div id="boot-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; background: #02040a; position: fixed; inset: 0; z-index: 100;">
             <div style="width: 50px; height: 50px; border: 4px solid #1e293b; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
             <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5em; color: #3b82f6; font-weight: 900;">BOOTING GOLDMASTER v5.5</div>
         </div>
