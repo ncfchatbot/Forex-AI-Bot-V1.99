@@ -18,6 +18,9 @@ import VPSAdvisor from './components/VPSAdvisor.tsx';
 import VPSShutdownGuide from './components/VPSShutdownGuide.tsx';
 import RiskBreakdown from './components/RiskBreakdown.tsx';
 import IntegrationGuide from './components/IntegrationGuide.tsx';
+import BacktestFixer from './components/BacktestFixer.tsx';
+import SuccessCalibration from './components/SuccessCalibration.tsx';
+import WealthAccelerator from './components/WealthAccelerator.tsx';
 
 const App: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('XAU/USD');
@@ -26,15 +29,15 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isMqlModalOpen, setIsMqlModalOpen] = useState(false);
   
-  const currentVersion = 'v5.7';
-  const [mt5Version] = useState('v5.5');
+  const currentVersion = 'v5.8 GHOST';
+  const [mt5Version] = useState('v5.7');
 
   const [stats] = useState<AccountStats>({
-    balance: 66633.00,
-    equity: 66633.00,
+    balance: 101317.64,
+    equity: 101317.64,
     dailyProfit: 0.00,
-    winRate: 91, 
-    totalTrades: 120
+    winRate: 92.5, 
+    totalTrades: 350
   });
 
   const handleFetchSignal = async (force: boolean = false) => {
@@ -58,18 +61,17 @@ const App: React.FC = () => {
   }, [selectedSymbol]);
 
   return (
-    <div className="min-h-screen bg-[#02040a] text-slate-200 font-sans selection:bg-yellow-500/30">
+    <div className="min-h-screen bg-[#02040a] text-slate-200 font-sans selection:bg-emerald-500/30">
       <MQL5CodeModal isOpen={isMqlModalOpen} onClose={() => setIsMqlModalOpen(false)} />
       
-      {/* FIXED ACTION BUTTON */}
       <div className="fixed bottom-10 right-10 z-[100]">
         <button 
           onClick={() => setIsMqlModalOpen(true)}
-          className="group flex items-center gap-5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 p-2 px-10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(234,179,8,0.5)] transition-all active:scale-95 border-4 border-[#02040a]"
+          className="group flex items-center gap-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 p-2 px-10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(16,185,129,0.5)] transition-all active:scale-95 border-4 border-[#02040a]"
         >
-          <div className="py-4 font-black text-xl italic tracking-tighter uppercase">📋 Get v5.7 Code</div>
-          <div className="w-12 h-12 bg-slate-950 text-yellow-500 rounded-full flex items-center justify-center group-hover:rotate-[360deg] transition-all duration-700">
-             <span className="font-black text-lg">v7</span>
+          <div className="py-4 font-black text-xl italic tracking-tighter uppercase">📋 Get v5.8 GHOST</div>
+          <div className="w-12 h-12 bg-slate-950 text-emerald-500 rounded-full flex items-center justify-center group-hover:rotate-[360deg] transition-all duration-700">
+             <span className="font-black text-lg">v8</span>
           </div>
         </button>
       </div>
@@ -77,16 +79,16 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-[40] bg-[#02040a]/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-[1600px] mx-auto px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="w-14 h-14 bg-yellow-500 rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer" onClick={() => setIsMqlModalOpen(true)}>
+            <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer" onClick={() => setIsMqlModalOpen(true)}>
               <span className="text-slate-950 font-black text-2xl italic">GM</span>
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tighter text-white flex items-center gap-4 italic uppercase">
-                GoldMaster <span className="text-yellow-500 underline underline-offset-8 text-xl lg:text-2xl">Ultra Elite</span>
+                GoldMaster <span className="text-emerald-400 underline underline-offset-8 text-xl lg:text-2xl">Ghost Scalper</span>
               </h1>
               <div className="flex items-center gap-3 mt-1.5">
-                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></span>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Live Engine v5.7</span>
+                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_100px_#10b981]"></span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Compounding Mode: ON</span>
               </div>
             </div>
           </div>
@@ -95,7 +97,7 @@ const App: React.FC = () => {
             onClick={() => handleFetchSignal(true)}
             disabled={isLoading}
             className={`px-8 py-4 rounded-2xl font-black text-xs uppercase transition-all flex items-center gap-4 shadow-2xl ${
-              isLoading ? 'bg-slate-800 text-slate-500' : 'bg-blue-600 text-white hover:bg-blue-500'
+              isLoading ? 'bg-slate-800 text-slate-500' : 'bg-emerald-600 text-white hover:bg-emerald-500'
             }`}
           >
             {isLoading ? 'SYNCING...' : '⚡ Sync Live AI'}
@@ -106,28 +108,32 @@ const App: React.FC = () => {
       <main className="max-w-[1600px] mx-auto px-8 py-12">
         <MarketRanker currentSymbol={selectedSymbol} onSelectSymbol={setSelectedSymbol} />
 
+        {/* NEW WEALTH ACCELERATOR COMPONENT */}
+        <WealthAccelerator balance={stats.balance} />
+
         {mt5Version !== currentVersion && (
-          <div className="mb-12 bg-red-600/10 border-2 border-red-500/20 p-8 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="mb-12 bg-emerald-600/10 border-2 border-emerald-500/20 p-8 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="flex items-center gap-8">
-              <div className="text-5xl">🚨</div>
+              <div className="text-5xl">🏦</div>
               <div>
-                <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter">Version Mismatch Detected</h4>
-                <p className="text-slate-400 text-sm italic mt-1">บอทใน MT5 ของคุณเป็น v5.5 กรุณาอัปเดตเป็น v5.7 เพื่อฟีเจอร์แบคเทสที่แม่นยำครับ</p>
+                <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter">Ready for Capital Expansion</h4>
+                <p className="text-slate-400 text-sm italic mt-1">อัปเกรดเป็น v5.8 เพื่อเปิดใช้ระบบคำนวณ Lot อัตโนมัติและเร่งการเติบโตของพอร์ตครับ</p>
               </div>
             </div>
-            <button onClick={() => setIsMqlModalOpen(true)} className="bg-yellow-500 text-slate-950 px-10 py-4 rounded-[2rem] font-black text-xs uppercase hover:scale-105 transition-all">อัปเดตโค้ดทันที</button>
+            <button onClick={() => setIsMqlModalOpen(true)} className="bg-emerald-500 text-slate-950 px-10 py-4 rounded-[2rem] font-black text-xs uppercase hover:scale-105 transition-all">Get v5.8 GHOST</button>
           </div>
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
           <div className="xl:col-span-8 space-y-10">
-            <BacktestLab balance={stats.balance} />
-            <StatsPanel stats={stats} history={[{name: 'Start', equity: 50000}, {name: 'Now', equity: 66633}, {name: 'Target', equity: 150000}]} />
+            <StatsPanel stats={stats} history={[{name: 'Start', equity: 50000}, {name: 'M1', equity: 75000}, {name: 'Current', equity: 101317}]} />
             <RiskBreakdown />
             <IncomeForecast balance={stats.balance} />
             <BotDiagnostics />
             <StrategyExplorer />
             <IntegrationGuide onOpenModal={() => setIsMqlModalOpen(true)} />
+            <SuccessCalibration />
+            <BacktestFixer />
             <DailyRoutine />
             <VPSShutdownGuide />
             <VPSAdvisor />
@@ -150,7 +156,7 @@ const App: React.FC = () => {
 
       <footer className="py-24 border-t border-white/5 text-center">
         <p className="text-slate-700 text-[11px] font-black uppercase tracking-[0.5em] italic">
-          Professional Gold Scalping Engine &bull; {currentVersion} STABLE BUILD
+          Professional Capital Management &bull; {currentVersion} STABLE BUILD
         </p>
       </footer>
     </div>
