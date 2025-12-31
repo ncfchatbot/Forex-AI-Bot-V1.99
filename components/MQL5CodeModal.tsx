@@ -20,12 +20,12 @@ input double InpRiskPercent    = 5.0;     // Aggressive 5% Risk per Trade
 input int    InpMaxSpread      = 35;      // ต่ำกว่าเดิมเพื่อความคม (3.5 pips)
 input int    InpTradeStartHour = 13;      // London Open
 input int    InpTradeEndHour   = 22;      // NY Close
-input int    InpMagic          = 100550;  // *** สำคัญ: เปลี่ยนเลขนี้หากเทรดหลายคู่พร้อมกัน ***
+input int    InpMagic          = 100550;  // ID ประจำตัวบอท
 
 //--- PRO SHIELD LOGIC
 input int    InpShieldStart    = 450;     // Safe Zone > 45 pips
 input int    InpShieldBuffer   = 30;      // Breakeven + Small Profit
-input int    InpTrailingStep   = 200;     // ให้ระยะหายใจ 200 จุด (Breathing Room)
+input int    InpTrailingStep   = 200;     // Trailing Step
 
 CTrade trade;
 
@@ -36,49 +36,66 @@ int OnInit() {
 }
 
 void OnTick() {
-   // 1. FILTER: News & Spread Guard
    if(SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) > InpMaxSpread) return;
    
-   // 2. MANAGEMENT: Dynamic Trailing
    DynamicTrailingShield();
-
    if(HasOpenPosition()) return; 
 
-   // 3. ANALYSIS: Multi-Timeframe Confluence (H1 Bias + M15 Entry)
    if(!IsStructureAligned()) return;
 
-   // 4. ENTRY: SMC Order Block Detection
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pt = _Point;
 
-   // Logic Simplified for UI Display
-   double demandZone = GetSMCZone(false); // หา Demand
-   double supplyZone = GetSMCZone(true);  // หา Supply
+   double demandZone = GetSMCZone(false); 
+   double supplyZone = GetSMCZone(true);  
 
    if(bid < demandZone + (300*pt)) {
-      double sl = demandZone - (200*pt); // Buffer กัน Stop Hunt
-      double tp = bid + (MathAbs(bid-sl) * 3.5); // RR 1:3.5
-      trade.Buy(CalculateLot(MathAbs(bid-sl)), _Symbol, ask, sl, tp, "v5.5 ELITE BUY");
+      double sl = demandZone - (200*pt); 
+      double tp = bid + (MathAbs(bid-sl) * 3.5); 
+      double lot = CalculateLot(MathAbs(bid-sl));
+      if(lot > 0) trade.Buy(lot, _Symbol, ask, sl, tp, "v5.5 ELITE BUY");
    }
    else if(bid > supplyZone - (300*pt)) {
       double sl = supplyZone + (200*pt);
       double tp = bid - (MathAbs(sl-bid) * 3.5);
-      trade.Sell(CalculateLot(MathAbs(sl-bid)), _Symbol, bid, sl, tp, "v5.5 ELITE SELL");
+      double lot = CalculateLot(MathAbs(sl-bid));
+      if(lot > 0) trade.Sell(lot, _Symbol, bid, sl, tp, "v5.5 ELITE SELL");
    }
 }
 
-//--- ระบบตรวจสอบความสอดคล้องของโครงสร้าง (Multi-Timeframe)
+double CalculateLot(double slDistance) {
+   if(slDistance <= 0) return 0;
+   
+   double riskMoney = AccountInfoDouble(ACCOUNT_BALANCE) * (InpRiskPercent/100.0);
+   double tickVal = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+   
+   if(tickVal <= 0) return 0;
+   
+   double lot = riskMoney / (slDistance / _Point * tickVal);
+   
+   //--- ดึงค่าจำกัดจากโบรกเกอร์ (ป้องกัน [invalid volume])
+   double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double maxLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
+   double stepLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   
+   //--- ปรับ Lot ให้ตรงตามกฎโบรกเกอร์
+   lot = MathFloor(lot/stepLot)*stepLot;
+   
+   if(lot < minLot) lot = minLot;
+   if(lot > maxLot) {
+      Print("WARNING: Calculated lot (", lot, ") exceeds broker max (", maxLot, "). Capping to max.");
+      lot = maxLot;
+   }
+   
+   return lot;
+}
+
 bool IsStructureAligned() {
    double h1_close[], m15_close[];
    CopyClose(_Symbol, PERIOD_H1, 0, 2, h1_close);
    CopyClose(_Symbol, PERIOD_M15, 0, 2, m15_close);
-   
-   // ต้องวิ่งไปทางเดียวกันทั้ง H1 และ M15
-   bool h1_up = h1_close[1] > h1_close[0];
-   bool m15_up = m15_close[1] > m15_close[0];
-   
-   return (h1_up == m15_up);
+   return (h1_close[1] > h1_close[0] == m15_close[1] > m15_close[0]);
 }
 
 double GetSMCZone(bool isSupply) {
@@ -116,14 +133,6 @@ void DynamicTrailingShield() {
    }
 }
 
-double CalculateLot(double slDistance) {
-   double riskMoney = AccountInfoDouble(ACCOUNT_BALANCE) * (InpRiskPercent/100.0);
-   double tickVal = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
-   double lot = riskMoney / (slDistance / _Point * tickVal);
-   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-   return MathMax(SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN), MathFloor(lot/step)*step);
-}
-
 bool HasOpenPosition() {
    for(int i=PositionsTotal()-1; i>=0; i--) {
       if(PositionSelect(PositionGetSymbol(i)) && PositionGetInteger(POSITION_MAGIC) == InpMagic) return true;
@@ -148,9 +157,9 @@ bool HasOpenPosition() {
             <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(59,130,246,0.5)]">🚀</div>
             <div>
               <h2 className="text-3xl font-black uppercase tracking-tighter leading-none">
-                GoldMaster v5.5 <span className="text-blue-400">DEMO READY</span>
+                GoldMaster v5.5 <span className="text-blue-400">FIXED VOLUME</span>
               </h2>
-              <span className="text-[10px] text-blue-400/70 font-black uppercase tracking-[0.4em] mt-2 block animate-pulse">Mode: Sandbox Deployment</span>
+              <span className="text-[10px] text-blue-400/70 font-black uppercase tracking-[0.4em] mt-2 block animate-pulse">แก้ไขปัญหา Invalid Volume เรียบร้อย</span>
             </div>
           </div>
           <button onClick={onClose} className="hover:bg-white/10 p-4 rounded-full transition-all group">
@@ -163,48 +172,39 @@ bool HasOpenPosition() {
             <div className="flex items-center justify-between mb-6">
               <span className="text-blue-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
                 <span className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></span>
-                READY TO COPY & PASTE
+                ก๊อปปี้โค้ดใหม่ลงทับตัวเดิมได้เลยครับ
               </span>
-              <span className="text-[10px] text-slate-500 font-mono italic">TEST ON DEMO FIRST</span>
             </div>
             
-            <pre className="bg-black/90 p-8 rounded-[2rem] text-[11px] font-mono text-blue-400/90 overflow-x-auto border border-blue-500/10 h-[480px] mb-6 shadow-3xl scrollbar-thin scrollbar-thumb-blue-500/20">
+            <pre className="bg-black/90 p-8 rounded-[2rem] text-[11px] font-mono text-blue-400/90 overflow-x-auto border border-blue-500/10 h-[480px] mb-6 shadow-3xl">
               {mql5Code}
             </pre>
             <button 
               onClick={copyToClipboard}
-              className="w-full py-8 bg-blue-500 hover:bg-blue-400 text-slate-950 text-lg font-black rounded-[2rem] shadow-[0_20px_50px_rgba(59,130,246,0.4)] transition-all flex items-center justify-center gap-5 active:scale-95 group overflow-hidden relative"
+              className="w-full py-8 bg-blue-500 hover:bg-blue-400 text-slate-950 text-lg font-black rounded-[2rem] shadow-[0_20px_50px_rgba(59,130,246,0.4)] transition-all flex items-center justify-center gap-5"
             >
-              <span className="relative z-10">{copied ? '✅ CODE COPIED! READY TO PASTE' : '📋 COPY SOURCE CODE (v5.5)'}</span>
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <span>{copied ? '✅ COPIED! PASTE IN MT5' : '📋 COPY NEW CODE (v5.5)'}</span>
             </button>
           </div>
 
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-amber-600/10 border border-amber-500/30 p-8 rounded-[2.5rem] relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 text-4xl">⚠️</div>
-               <h4 className="text-amber-400 font-black text-sm uppercase flex items-center gap-3 mb-4 tracking-widest">
-                 IMPORTANT FOR DEMO
-               </h4>
+            <div className="bg-red-600/10 border border-red-500/30 p-8 rounded-[2.5rem]">
+               <h4 className="text-red-400 font-black text-sm uppercase mb-4 tracking-widest">🚨 เหตุผลที่ต้องใช้โค้ดนี้</h4>
                <p className="text-slate-300 text-[12px] font-bold leading-relaxed italic">
-                "ก่อนกดรัน ให้ตรวจสอบว่า <b>Auto Trading</b> เป็นสีเขียว และในช่อง <b>Common</b> ของบอท ได้ติ๊กถูกที่ <b>'Allow Algo Trading'</b> แล้วนะครับ"
+                "ในรูปของคุณ โบรกเกอร์ไม่ยอมให้เปิดไม้เพราะ <b>102 Lot มันใหญ่ไป</b> โค้ดใหม่นี้จะลด Lot ลงมาให้อยู่ในเกณฑ์สูงสุดที่โบรกเกอร์รับไหวโดยอัตโนมัติ เพื่อให้บอทเริ่มเทรดได้ครับ"
                </p>
             </div>
 
-            <div className="bg-slate-800/40 p-8 rounded-[2.5rem] border border-white/5 shadow-inner">
-              <div className="text-blue-400 text-xs font-black mb-6 uppercase tracking-widest border-b border-white/5 pb-2 italic">MT5 SETUP QUICK-GUIDE</div>
+            <div className="bg-slate-800/40 p-8 rounded-[2.5rem] border border-white/5">
+              <div className="text-blue-400 text-xs font-black mb-6 uppercase tracking-widest italic">MT5 ICON GUIDE</div>
               <ul className="text-[11px] text-slate-400 space-y-5">
                 <li className="flex gap-5">
-                  <span className="text-blue-500 shrink-0 text-xl">1️⃣</span>
-                  <span><b>Symbol:</b> ลากบอทใส่กราฟ <b>XAUUSD</b> (ทองคำ)</span>
+                  <span className="text-blue-500 shrink-0 text-xl">🧢</span>
+                  <span><b>หมวกน้ำเงิน:</b> คือปกติของ MT5 ครับ (มันจะไม่เป็นสีเขียวเหมือน MT4)</span>
                 </li>
                 <li className="flex gap-5">
-                  <span className="text-blue-500 shrink-0 text-xl">2️⃣</span>
-                  <span><b>Timeframe:</b> ปรับกราฟไปที่ <b>M15</b> (สำคัญมากสำหรับ SMC Logic)</span>
-                </li>
-                <li className="flex gap-5">
-                  <span className="text-blue-500 shrink-0 text-xl">3️⃣</span>
-                  <span><b>Risk Check:</b> เริ่มต้นที่ 5% ตามโค้ดมาตรฐานเพื่อดูผลลัพธ์</span>
+                  <span className="text-blue-500 shrink-0 text-xl">🟢</span>
+                  <span><b>Algo Trading:</b> ขอแค่ปุ่มนี้ด้านบนเป็นสีเขียว บอทก็พร้อมลุยแล้วครับ</span>
                 </li>
               </ul>
             </div>
