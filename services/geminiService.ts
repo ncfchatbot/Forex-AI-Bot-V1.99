@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { MarketSignal, MarketSide, StrategyVerdict } from "../types";
+import { MarketSignal, MarketSide, StrategyVerdict } from "../types.ts";
 
 const getSafeAiInstance = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -49,7 +49,7 @@ export const getUnifiedAnalysis = async (symbol: string, capital: number): Promi
               properties: {
                 side: { type: Type.STRING },
                 confidence: { type: Type.NUMBER },
-                reasoning: { type: Type.STRING, description: "Detailed explanation of why BUY or SELL was chosen over the other." },
+                reasoning: { type: Type.STRING },
                 keyFactors: { type: Type.ARRAY, items: { type: Type.STRING } },
               },
               required: ["side", "confidence", "reasoning", "keyFactors"]

@@ -1,19 +1,26 @@
 
 import React, { useState, useEffect } from 'react';
-import { MarketSignal, AccountStats, StrategyVerdict, MarketSide } from './types';
-import { getUnifiedAnalysis } from './services/geminiService';
-import SignalCard from './components/SignalCard';
-import StatsPanel from './components/StatsPanel';
-import MQL5CodeModal from './components/MQL5CodeModal';
-import StrategyConsultant from './components/StrategyConsultant';
-import StrategyBattle from './components/StrategyBattle';
-import BotDiagnostics from './components/BotDiagnostics';
-import IncomeForecast from './components/IncomeForecast';
-import NavigatorGuide from './components/NavigatorGuide';
-import BacktestLab from './components/BacktestLab';
+import { MarketSignal, AccountStats, StrategyVerdict, MarketSide } from './types.ts';
+import { getUnifiedAnalysis } from './services/geminiService.ts';
+import SignalCard from './components/SignalCard.tsx';
+import StatsPanel from './components/StatsPanel.tsx';
+import MQL5CodeModal from './components/MQL5CodeModal.tsx';
+import StrategyConsultant from './components/StrategyConsultant.tsx';
+import StrategyBattle from './components/StrategyBattle.tsx';
+import BotDiagnostics from './components/BotDiagnostics.tsx';
+import IncomeForecast from './components/IncomeForecast.tsx';
+import NavigatorGuide from './components/NavigatorGuide.tsx';
+import BacktestLab from './components/BacktestLab.tsx';
+import MarketRanker from './components/MarketRanker.tsx';
+import StrategyExplorer from './components/StrategyExplorer.tsx';
+import DailyRoutine from './components/DailyRoutine.tsx';
+import VPSAdvisor from './components/VPSAdvisor.tsx';
+import VPSShutdownGuide from './components/VPSShutdownGuide.tsx';
+import RiskBreakdown from './components/RiskBreakdown.tsx';
+import IntegrationGuide from './components/IntegrationGuide.tsx';
 
 const App: React.FC = () => {
-  const [selectedSymbol] = useState('XAU/USD');
+  const [selectedSymbol, setSelectedSymbol] = useState('XAU/USD');
   const [signal, setSignal] = useState<MarketSignal | null>(null);
   const [verdict, setVerdict] = useState<StrategyVerdict | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,15 +52,16 @@ const App: React.FC = () => {
   };
 
   useEffect(() => { 
+    console.log("✅ App Mounted, hiding loader...");
     if ((window as any).hideAppLoader) (window as any).hideAppLoader();
     handleFetchSignal();
-  }, []);
+  }, [selectedSymbol]);
 
   return (
     <div className="min-h-screen bg-[#02040a] text-slate-200 font-sans selection:bg-yellow-500/30">
       <MQL5CodeModal isOpen={isMqlModalOpen} onClose={() => setIsMqlModalOpen(false)} />
       
-      {/* 1. PERMANENT STICKY BUTTON */}
+      {/* FIXED ACTION BUTTON */}
       <div className="fixed bottom-10 right-10 z-[100]">
         <button 
           onClick={() => setIsMqlModalOpen(true)}
@@ -90,19 +98,21 @@ const App: React.FC = () => {
               isLoading ? 'bg-slate-800 text-slate-500' : 'bg-blue-600 text-white hover:bg-blue-500'
             }`}
           >
-            {isLoading ? 'SYNCING...' : '⚡ Sync AI'}
+            {isLoading ? 'SYNCING...' : '⚡ Sync Live AI'}
           </button>
         </div>
       </header>
 
       <main className="max-w-[1600px] mx-auto px-8 py-12">
+        <MarketRanker currentSymbol={selectedSymbol} onSelectSymbol={setSelectedSymbol} />
+
         {mt5Version !== currentVersion && (
           <div className="mb-12 bg-red-600/10 border-2 border-red-500/20 p-8 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="flex items-center gap-8">
               <div className="text-5xl">🚨</div>
               <div>
-                <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter">การซิงค์ไม่สำเร็จ (Version Mismatch)</h4>
-                <p className="text-slate-400 text-sm italic mt-1">บอทใน MT5 ของคุณเป็น v5.5 กรุณาอัปเดตเป็น v5.7 เพื่อให้แบคเทสได้แม่นยำครับ</p>
+                <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter">Version Mismatch Detected</h4>
+                <p className="text-slate-400 text-sm italic mt-1">บอทใน MT5 ของคุณเป็น v5.5 กรุณาอัปเดตเป็น v5.7 เพื่อฟีเจอร์แบคเทสที่แม่นยำครับ</p>
               </div>
             </div>
             <button onClick={() => setIsMqlModalOpen(true)} className="bg-yellow-500 text-slate-950 px-10 py-4 rounded-[2rem] font-black text-xs uppercase hover:scale-105 transition-all">อัปเดตโค้ดทันที</button>
@@ -112,9 +122,15 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
           <div className="xl:col-span-8 space-y-10">
             <BacktestLab balance={stats.balance} />
-            <StatsPanel stats={stats} history={[{name: 'Start', equity: 50000}, {name: 'v5.5', equity: 66633}, {name: 'Target', equity: 150000}]} />
-            <BotDiagnostics />
+            <StatsPanel stats={stats} history={[{name: 'Start', equity: 50000}, {name: 'Now', equity: 66633}, {name: 'Target', equity: 150000}]} />
+            <RiskBreakdown />
             <IncomeForecast balance={stats.balance} />
+            <BotDiagnostics />
+            <StrategyExplorer />
+            <IntegrationGuide onOpenModal={() => setIsMqlModalOpen(true)} />
+            <DailyRoutine />
+            <VPSShutdownGuide />
+            <VPSAdvisor />
             <NavigatorGuide />
           </div>
 
@@ -134,7 +150,7 @@ const App: React.FC = () => {
 
       <footer className="py-24 border-t border-white/5 text-center">
         <p className="text-slate-700 text-[11px] font-black uppercase tracking-[0.5em] italic">
-          Professional Scalping Engine &bull; {currentVersion} STABLE BUILD
+          Professional Gold Scalping Engine &bull; {currentVersion} STABLE BUILD
         </p>
       </footer>
     </div>
