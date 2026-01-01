@@ -5,8 +5,9 @@ interface AssetRank {
   rank: number;
   symbol: string;
   name: string;
-  safety: number; // 0-100
-  return: number; // 0-100
+  safety: number; 
+  return: number; 
+  tag: string;
   description: string;
 }
 
@@ -15,41 +16,37 @@ const ranks: AssetRank[] = [
     rank: 1,
     symbol: 'EUR/USD',
     name: 'Euro / US Dollar',
-    safety: 95,
-    return: 70,
-    description: 'ปลอดภัยที่สุด สภาพคล่องสูงมาก กราฟวิ่งตาม SMC แม่นยำ เหมาะกับมือใหม่และพอร์ตใหญ่'
+    safety: 98,
+    return: 65,
+    tag: '👑 BEST FOR SMALL CHANGE',
+    description: 'สเปรดต่ำที่สุด เหมาะมากกับกลยุทธ์เก็บเศษเงินที่เน้นความสม่ำเสมอและไม่ลุ้นจนหัวใจวาย'
   },
   {
     rank: 2,
     symbol: 'XAU/USD',
-    name: 'Gold (XAU)',
-    safety: 60,
-    return: 98,
-    description: 'ผลตอบแทนสูงสุด แต่ความผันผวนสูงมาก ต้องคุม Risk 1% และใช้ Trailing Stop ตลอดเวลา'
+    name: 'Gold (Spot)',
+    safety: 55,
+    return: 95,
+    tag: '🔥 HIGH REWARD / VOLATILE',
+    description: 'กำไรคำใหญ่ แต่ต้องแลกด้วยสเปรดที่สูงและการเหวี่ยงแรง ต้องใช้ v14.1 Filter เท่านั้น'
   },
   {
     rank: 3,
     symbol: 'GBP/USD',
     name: 'Great British Pound',
-    safety: 85,
-    return: 80,
-    description: 'วิ่งแรงกว่า EUR ล็อคกำไร Trailing ได้คำใหญ่ขึ้น แต่ต้องระวังข่าวฝั่งอังกฤษ'
+    safety: 82,
+    return: 75,
+    tag: '⚡ TREND FOLLOWER',
+    description: 'วิ่งแรงกว่า EUR นิดหน่อย เก็บกำไรได้เป็นกอบเป็นกำในช่วงตลาดลอนดอนเปิด'
   },
   {
     rank: 4,
     symbol: 'USD/JPY',
-    name: 'US Dollar / Yen',
-    safety: 75,
-    return: 85,
-    description: 'Trend ชัดเจนมาก (Trend Following) เหมาะกับบอทที่ชอบถือตามแนวโน้ม'
-  },
-  {
-    rank: 5,
-    symbol: 'WTI/USD',
-    name: 'Crude Oil',
-    safety: 50,
-    return: 90,
-    description: 'โซน Supply/Demand ชัดเจนที่สุด แต่ค่า Spread และ Margin อาจสูงกว่าคู่เงิน'
+    name: 'Dollar / Yen',
+    safety: 88,
+    return: 70,
+    tag: '📉 SMOOTH TRENDS',
+    description: 'เทรนด์ชัดเจนและยาวนาน เหมาะสำหรับสายที่ไม่ชอบกราฟสับขาหลอกบ่อยๆ'
   }
 ];
 
@@ -60,67 +57,65 @@ interface MarketRankerProps {
 
 const MarketRanker: React.FC<MarketRankerProps> = ({ currentSymbol, onSelectSymbol }) => {
   return (
-    <div className="mb-10">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mb-14">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter italic">
-            Top 5 <span className="text-emerald-400">Opportunity Ranker</span>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">
+            Asset <span className="text-blue-400">Selector</span>
           </h2>
-          <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-500/20">
-            SMC EFFICIENCY INDEX
+          <span className="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-4 py-1 rounded-full border border-blue-500/20">
+            SMC COMPATIBILITY
           </span>
-        </div>
-        <div className="text-[10px] text-slate-500 font-black uppercase italic tracking-widest animate-pulse">
-           Click to switch AI Analysis →
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {ranks.map((item) => (
           <button
             key={item.symbol}
             onClick={() => onSelectSymbol(item.symbol)}
-            className={`text-left p-5 rounded-3xl border transition-all relative overflow-hidden group ${
+            className={`text-left p-8 rounded-[2.5rem] border-2 transition-all relative overflow-hidden group ${
               currentSymbol === item.symbol 
-                ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)] scale-[1.02]' 
-                : 'bg-slate-900/40 border-slate-800 hover:border-emerald-500/30'
+                ? 'bg-blue-600/10 border-blue-500 shadow-[0_0_50px_rgba(37,99,235,0.2)] scale-[1.03]' 
+                : 'bg-slate-900/40 border-white/5 hover:border-blue-500/30'
             }`}
           >
-            <div className="absolute top-2 right-4 text-4xl font-black opacity-5 group-hover:opacity-10 transition-opacity">
-              {item.rank}
+            <div className="absolute -top-4 -right-4 text-7xl font-black opacity-[0.03] group-hover:opacity-[0.07] transition-opacity italic">
+              {item.symbol.split('/')[0]}
             </div>
             
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${currentSymbol === item.symbol ? 'bg-emerald-400 animate-pulse' : 'bg-slate-700'}`}></span>
-                <span className={`text-xs font-black ${currentSymbol === item.symbol ? 'text-emerald-400' : 'text-white'}`}>{item.symbol}</span>
-              </div>
-              {currentSymbol === item.symbol && <span className="text-[8px] font-black text-emerald-500 uppercase">Selected</span>}
+            <div className="mb-6">
+               <div className={`text-[9px] font-black uppercase tracking-widest mb-2 ${currentSymbol === item.symbol ? 'text-blue-400' : 'text-slate-500'}`}>
+                  {item.tag}
+               </div>
+               <h3 className={`text-2xl font-black italic ${currentSymbol === item.symbol ? 'text-white' : 'text-slate-400'}`}>
+                  {item.symbol}
+               </h3>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4 mb-6">
               <div>
-                <div className="flex justify-between text-[9px] text-slate-500 uppercase font-bold mb-1">
+                <div className="flex justify-between text-[8px] text-slate-500 uppercase font-black mb-1.5">
                   <span>Safety</span>
-                  <span className="text-emerald-400">{item.safety}%</span>
+                  <span className="text-blue-400">{item.safety}%</span>
                 </div>
-                <div className="h-1 w-full bg-slate-800 rounded-full">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${item.safety}%` }}></div>
+                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500" style={{ width: `${item.safety}%` }}></div>
                 </div>
               </div>
               
               <div>
-                <div className="flex justify-between text-[9px] text-slate-500 uppercase font-bold mb-1">
-                  <span>ROI</span>
-                  <span className="text-blue-400">{item.return}%</span>
+                <div className="flex justify-between text-[8px] text-slate-500 uppercase font-black mb-1.5">
+                  <span>Profit Potential</span>
+                  <span className="text-emerald-400">{item.return}%</span>
                 </div>
-                <div className="h-1 w-full bg-slate-800 rounded-full">
-                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.return}%` }}></div>
+                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: `${item.return}%` }}></div>
                 </div>
               </div>
             </div>
 
-            <p className="mt-4 text-[9px] text-slate-500 leading-relaxed line-clamp-2 italic">
+            <p className="text-[10px] text-slate-500 leading-relaxed italic line-clamp-3">
               "{item.description}"
             </p>
           </button>

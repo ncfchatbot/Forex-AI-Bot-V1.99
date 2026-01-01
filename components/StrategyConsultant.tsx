@@ -16,8 +16,6 @@ const StrategyConsultant: React.FC<StrategyConsultantProps> = ({ verdict, isLoad
     </div>
   );
 
-  const isHoliday = new Date().getMonth() === 11 || new Date().getMonth() === 0;
-
   if (!verdict) return null;
 
   return (
@@ -25,35 +23,22 @@ const StrategyConsultant: React.FC<StrategyConsultantProps> = ({ verdict, isLoad
       <div className="flex items-center justify-between mb-10">
         <h3 className="font-black text-2xl text-white flex items-center gap-5 uppercase italic tracking-tighter">
           <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-xl text-indigo-400">🧠</div>
-          AI Analysis
+          Elite Strategy
         </h3>
         <div className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${sideBias === MarketSide.BUY ? 'bg-emerald-500 text-slate-950 shadow-[0_0_20px_#10b981]' : 'bg-red-500 text-white shadow-[0_0_20px_#ef4444]'}`}>
-          {sideBias} PREFERRED
+          SAFE MODE ACTIVE
         </div>
       </div>
 
-      {isHoliday && (
-        <div className="mb-10 bg-orange-500/10 border-2 border-orange-500/30 p-6 rounded-3xl">
-           <div className="text-orange-400 font-black text-[10px] uppercase mb-2">📢 Holiday Note:</div>
-           <p className="text-slate-300 text-[11px] italic leading-relaxed">
-             "เนื่องจากเป็นช่วงส่งท้ายปี ปริมาณการเทรดในตลาดโลกจะน้อยลงมาก บอท v5.7 อาจจะไม่เปิดออเดอร์เพราะราคาวิ่งไม่แรงพอ หรือ Spread กว้างเกินไป นี่คือระบบป้องกันพอร์ตแตกที่ดีที่สุดครับ"
-           </p>
-        </div>
-      )}
-
       <div className="mb-10 bg-black/40 p-8 rounded-[2rem] border border-white/5">
-        <div className="flex justify-between items-center mb-5">
-          <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] italic">Logic Breakdown</span>
-        </div>
+        <div className="text-[10px] text-emerald-400 font-black uppercase mb-4 tracking-widest italic">วิเคราะห์ความคุ้มค่าจาก AI:</div>
         <p className="text-slate-300 text-[12px] leading-relaxed italic">
-          {sideBias === MarketSide.BUY 
-            ? "ตลาดมีแนวโน้มสะสมพลังเพื่อขึ้นต่อในสภาวะ Bullish SMC หากสภาพคล่องกลับมาปกติ แผน BUY คือแผนที่ปลอดภัยที่สุดครับ" 
-            : "โครงสร้างตลาดเริ่มมีการอ่อนแรง (Weakness) แผน SELL ตามน้ำจากจุด Supply มีโอกาสสำเร็จสูงกว่าในช่วงสภาพคล่องต่ำแบบนี้ครับ"}
+          "จากผลแบคเทส 278 ไม้ที่คุณทำ ระบบ v5.8 พิสูจน์แล้วว่า **Survive is the new Growth** การที่คุณไม่แตกในตลาดทองที่ผันผวน คือชัยชนะที่ยิ่งใหญ่ที่สุด เพราะหลังจากนี้คือช่วงเวลาของการ Compounding เพื่อให้กำไรหลักสิบกลายเป็นหลักพันเหรียญครับ"
         </p>
       </div>
 
       <div className="bg-indigo-500/5 border border-indigo-500/20 p-8 rounded-3xl mb-10">
-        <div className="text-[10px] text-indigo-400 font-black uppercase mb-4 tracking-widest italic">Professional Verdict:</div>
+        <div className="text-[10px] text-indigo-400 font-black uppercase mb-4 tracking-widest italic">ความลับเศรษฐี:</div>
         <p className="text-slate-200 text-xs leading-relaxed italic font-bold">
           {verdict.verdict}
         </p>
